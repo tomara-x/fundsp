@@ -11,7 +11,10 @@ use super::shared::IdGenerator;
 use super::signal::*;
 use super::vertex::*;
 use super::*;
+#[cfg(feature = "crossbeam")]
+use crossbeam_channel::{bounded as channel, Receiver, Sender};
 use hashbrown::HashMap;
+#[cfg(not(feature = "crossbeam"))]
 use thingbuf::mpsc::{channel, Receiver, Sender};
 extern crate alloc;
 use super::sequencer::Fade;

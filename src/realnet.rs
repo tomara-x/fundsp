@@ -6,6 +6,9 @@ use super::math::*;
 use super::net::*;
 use super::setting::*;
 use super::signal::*;
+#[cfg(feature = "crossbeam")]
+use crossbeam_channel::{Receiver, Sender};
+#[cfg(not(feature = "crossbeam"))]
 use thingbuf::mpsc::{channel, Receiver, Sender};
 extern crate alloc;
 use alloc::boxed::Box;
@@ -28,6 +31,7 @@ pub(crate) enum NetReturn {
     Unit(Box<dyn AudioUnit>),
 }
 
+#[cfg_attr(feature = "crossbeam", derive(Clone))]
 pub struct NetBackend {
     /// For sending versions for deallocation back to the frontend.
     sender: Option<Sender<NetReturn>>,
@@ -36,6 +40,7 @@ pub struct NetBackend {
     net: Net,
 }
 
+#[cfg(not(feature = "crossbeam"))]
 impl Clone for NetBackend {
     fn clone(&self) -> Self {
         // Allocate a dummy channel.

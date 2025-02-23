@@ -6,6 +6,9 @@ use super::math::*;
 use super::net::*;
 use super::realnet::*;
 use super::sequencer::Fade;
+#[cfg(feature = "crossbeam")]
+use crossbeam_channel::Sender;
+#[cfg(not(feature = "crossbeam"))]
 use thingbuf::mpsc::Sender;
 extern crate alloc;
 use alloc::boxed::Box;

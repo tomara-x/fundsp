@@ -5,6 +5,9 @@ use super::buffer::*;
 use super::math::*;
 use super::sequencer::*;
 use super::signal::*;
+#[cfg(feature = "crossbeam")]
+use crossbeam_channel::{Receiver, Sender};
+#[cfg(not(feature = "crossbeam"))]
 use thingbuf::mpsc::{channel, Receiver, Sender};
 
 #[derive(Default, Clone)]
@@ -22,6 +25,7 @@ pub(crate) enum Message {
     EditRelative(EventId, Edit),
 }
 
+#[cfg_attr(feature = "crossbeam", derive(Clone))]
 pub struct SequencerBackend {
     /// For sending events for deallocation back to the frontend.
     pub(crate) sender: Sender<Option<Event>>,
@@ -31,6 +35,7 @@ pub struct SequencerBackend {
     sequencer: Sequencer,
 }
 
+#[cfg(not(feature = "crossbeam"))]
 impl Clone for SequencerBackend {
     fn clone(&self) -> Self {
         // Allocate a dummy channel.

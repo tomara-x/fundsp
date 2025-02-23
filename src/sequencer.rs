@@ -13,7 +13,10 @@ use alloc::boxed::Box;
 use alloc::collections::BinaryHeap;
 use alloc::vec;
 use alloc::vec::Vec;
+#[cfg(feature = "crossbeam")]
+use crossbeam_channel::{bounded as channel, Receiver, Sender};
 use hashbrown::HashMap;
+#[cfg(not(feature = "crossbeam"))]
 use thingbuf::mpsc::{channel, Receiver, Sender};
 
 /// Globally unique ID for a sequencer event.
