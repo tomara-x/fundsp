@@ -6,6 +6,9 @@ use super::math::*;
 use super::sequencer::*;
 use super::signal::*;
 use super::*;
+#[cfg(feature = "crossbeam")]
+use crossbeam_channel::{bounded as channel, Receiver, Sender};
+#[cfg(not(feature = "crossbeam"))]
 use thingbuf::mpsc::{channel, Receiver, Sender};
 extern crate alloc;
 use alloc::boxed::Box;
@@ -89,6 +92,7 @@ impl Slot {
     }
 }
 
+#[cfg_attr(feature = "crossbeam", derive(Clone))]
 pub struct SlotBackend {
     inputs: usize,
     outputs: usize,
@@ -107,6 +111,7 @@ pub struct SlotBackend {
     tick: Vec<f32>,
 }
 
+#[cfg(not(feature = "crossbeam"))]
 impl Clone for SlotBackend {
     fn clone(&self) -> Self {
         // Backends cannot be cloned effectively. Allocate a dummy channel.
