@@ -97,7 +97,7 @@ impl SequencerBackend {
 
 impl AudioUnit for SequencerBackend {
     fn inputs(&self) -> usize {
-        0
+        self.sequencer.inputs()
     }
 
     fn outputs(&self) -> usize {

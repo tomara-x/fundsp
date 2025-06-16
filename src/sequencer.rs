@@ -227,6 +227,8 @@ pub struct Sequencer {
     past: Vec<Event>,
     /// Map of edits to be made to events in the ready queue.
     edit_map: HashMap<EventId, Edit>,
+    /// Number of input channels.
+    inputs: usize,
     /// Number of output channels.
     outputs: usize,
     /// Current time. Does not apply to frontends.
@@ -257,6 +259,7 @@ impl Clone for Sequencer {
             ready: self.ready.clone(),
             past: self.past.clone(),
             edit_map: self.edit_map.clone(),
+            inputs: self.inputs,
             outputs: self.outputs,
             time: self.time,
             sample_rate: self.sample_rate,
@@ -287,6 +290,7 @@ impl Sequencer {
             ready: BinaryHeap::with_capacity(DEFAULT_CAPACITY),
             past: Vec::with_capacity(DEFAULT_CAPACITY),
             edit_map: HashMap::with_capacity(DEFAULT_CAPACITY),
+            inputs: 0,
             outputs,
             time: 0.0,
             sample_rate: DEFAULT_SR,
@@ -296,6 +300,11 @@ impl Sequencer {
             front: None,
             replay_events,
         }
+    }
+
+    pub fn with_inputs(mut self, inputs: usize) -> Self {
+        self.inputs = inputs;
+        self
     }
 
     /// Current time in seconds.
@@ -316,7 +325,7 @@ impl Sequencer {
         fade_out_time: f64,
         mut unit: Box<dyn AudioUnit>,
     ) -> EventId {
-        assert_eq!(unit.inputs(), 0);
+        assert_eq!(unit.inputs(), self.inputs);
         assert_eq!(unit.outputs(), self.outputs);
         let duration = end_time - start_time;
         assert!(fade_in_time <= duration && fade_out_time <= duration);
@@ -791,7 +800,7 @@ impl AudioUnit for Sequencer {
     }
 
     fn inputs(&self) -> usize {
-        0
+        self.inputs
     }
     fn outputs(&self) -> usize {
         self.outputs
