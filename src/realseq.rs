@@ -96,7 +96,7 @@ impl SequencerBackend {
                     self.sequencer.set_replay_events(keep);
                 }
                 Message::Clear => {
-                    self.sequencer.clear();
+                    self.send_back_all();
                 }
             }
         }
@@ -105,6 +105,19 @@ impl SequencerBackend {
     #[inline]
     fn send_back_past(&mut self) {
         while let Some(event) = self.sequencer.get_past_event() {
+            if self.sender.try_send(Some(event)).is_ok() {}
+        }
+    }
+
+    #[inline]
+    fn send_back_all(&mut self) {
+        while let Some(event) = self.sequencer.get_past_event() {
+            if self.sender.try_send(Some(event)).is_ok() {}
+        }
+        while let Some(event) = self.sequencer.get_ready_event() {
+            if self.sender.try_send(Some(event)).is_ok() {}
+        }
+        while let Some(event) = self.sequencer.get_active_event() {
             if self.sender.try_send(Some(event)).is_ok() {}
         }
     }
