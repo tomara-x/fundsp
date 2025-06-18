@@ -27,6 +27,8 @@ pub(crate) enum Message {
     SetLoopPoint(Option<f64>),
     /// edet replay events flag
     SetReplayEvents(bool),
+    /// clear all events
+    Clear,
 }
 
 #[cfg_attr(feature = "crossbeam", derive(Clone))]
@@ -92,6 +94,9 @@ impl SequencerBackend {
                 }
                 Message::SetReplayEvents(keep) => {
                     self.sequencer.set_replay_events(keep);
+                }
+                Message::Clear => {
+                    self.sequencer.clear();
                 }
             }
         }
