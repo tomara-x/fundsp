@@ -583,6 +583,15 @@ impl Sequencer {
         self.replay_events
     }
 
+    /// set whether to keep past events or not
+    pub fn set_replay_events(&mut self, keep: bool) {
+        if let Some((sender, _)) = &mut self.front {
+            if sender.try_send(Message::SetReplayEvents(keep)).is_ok() {}
+        } else {
+            self.replay_events = keep;
+        }
+    }
+
     /// Get past events. This is an internal method.
     pub(crate) fn get_past_event(&mut self) -> Option<Event> {
         self.past.pop()

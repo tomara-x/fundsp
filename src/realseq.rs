@@ -25,6 +25,8 @@ pub(crate) enum Message {
     EditRelative(EventId, Edit),
     /// edit loop point
     SetLoopPoint(Option<f64>),
+    /// edet replay events flag
+    SetReplayEvents(bool),
 }
 
 #[cfg_attr(feature = "crossbeam", derive(Clone))]
@@ -87,6 +89,9 @@ impl SequencerBackend {
                 }
                 Message::SetLoopPoint(t) => {
                     self.sequencer.set_loop_point(t);
+                }
+                Message::SetReplayEvents(keep) => {
+                    self.sequencer.set_replay_events(keep);
                 }
             }
         }
