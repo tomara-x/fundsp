@@ -97,6 +97,7 @@ impl SequencerBackend {
                 }
                 Message::Clear => {
                     self.send_back_all();
+                    self.sequencer.clear();
                 }
             }
         }
@@ -135,15 +136,7 @@ impl AudioUnit for SequencerBackend {
     fn reset(&mut self) {
         self.handle_messages();
         if !self.sequencer.replay_events() {
-            while let Some(event) = self.sequencer.get_past_event() {
-                if self.sender.try_send(Some(event)).is_ok() {}
-            }
-            while let Some(event) = self.sequencer.get_ready_event() {
-                if self.sender.try_send(Some(event)).is_ok() {}
-            }
-            while let Some(event) = self.sequencer.get_active_event() {
-                if self.sender.try_send(Some(event)).is_ok() {}
-            }
+            self.send_back_all();
         }
         self.sequencer.reset();
     }

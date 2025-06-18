@@ -587,22 +587,20 @@ impl Sequencer {
     pub fn set_replay_events(&mut self, keep: bool) {
         if let Some((sender, _)) = &mut self.front {
             if sender.try_send(Message::SetReplayEvents(keep)).is_ok() {}
-        } else {
-            self.replay_events = keep;
         }
+        self.replay_events = keep;
     }
 
     /// clear all events
     pub fn clear(&mut self) {
         if let Some((sender, _)) = &mut self.front {
             if sender.try_send(Message::Clear).is_ok() {}
-        } else {
-            while let Some(_ready) = self.ready.pop() {}
-            while let Some(_past) = self.past.pop() {}
-            while let Some(_active) = self.active.pop() {}
-            self.edit_map.clear();
-            self.active_map.clear();
         }
+        while let Some(_ready) = self.ready.pop() {}
+        while let Some(_past) = self.past.pop() {}
+        while let Some(_active) = self.active.pop() {}
+        self.edit_map.clear();
+        self.active_map.clear();
     }
 
     /// Get past events. This is an internal method.
