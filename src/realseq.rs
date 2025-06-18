@@ -23,6 +23,8 @@ pub(crate) enum Message {
     Edit(EventId, Edit),
     /// Edit event in relative time.
     EditRelative(EventId, Edit),
+    /// edit loop point
+    SetLoopPoint(Option<f64>),
 }
 
 #[cfg_attr(feature = "crossbeam", derive(Clone))]
@@ -82,6 +84,9 @@ impl SequencerBackend {
                 Message::EditRelative(id, edit) => {
                     self.sequencer
                         .edit_relative(id, edit.end_time, edit.fade_out);
+                }
+                Message::SetLoopPoint(t) => {
+                    self.sequencer.set_loop_point(t);
                 }
             }
         }

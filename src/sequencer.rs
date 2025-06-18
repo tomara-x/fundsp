@@ -245,6 +245,8 @@ pub struct Sequencer {
     front: Option<(Sender<Message>, Receiver<Option<Event>>)>,
     /// Whether we replay existing events after a call to `reset`.
     replay_events: bool,
+    /// loop point (in seconds)
+    loop_point: Option<f64>,
 }
 
 impl Clone for Sequencer {
@@ -268,6 +270,7 @@ impl Clone for Sequencer {
             tick_buffer: self.tick_buffer.clone(),
             front: None,
             replay_events: self.replay_events,
+            loop_point: self.loop_point,
         }
     }
 }
@@ -299,12 +302,27 @@ impl Sequencer {
             tick_buffer: vec![0.0; outputs],
             front: None,
             replay_events,
+            loop_point: None,
         }
     }
 
     pub fn with_inputs(mut self, inputs: usize) -> Self {
         self.inputs = inputs;
         self
+    }
+
+    pub fn with_loop_point(mut self, t: f64) -> Self {
+        self.loop_point = Some(t);
+        self
+    }
+
+    /// set loop point
+    pub fn set_loop_point(&mut self, t: Option<f64>) {
+        if let Some((sender, _)) = &mut self.front {
+            if sender.try_send(Message::SetLoopPoint(t)).is_ok() {}
+        } else {
+            self.loop_point = t;
+        }
     }
 
     /// Current time in seconds.
@@ -711,6 +729,11 @@ impl AudioUnit for Sequencer {
             }
         }
         self.time = end_time;
+        if let Some(loop_point) = self.loop_point {
+            if self.time >= loop_point {
+                self.reset();
+            }
+        }
     }
 
     fn process(&mut self, size: usize, input: &BufferRef, output: &mut BufferMut) {
@@ -792,6 +815,11 @@ impl AudioUnit for Sequencer {
             }
         }
         self.time = end_time;
+        if let Some(loop_point) = self.loop_point {
+            if self.time >= loop_point {
+                self.reset();
+            }
+        }
     }
 
     fn get_id(&self) -> u64 {
