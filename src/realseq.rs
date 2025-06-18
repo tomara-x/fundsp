@@ -149,20 +149,30 @@ impl AudioUnit for SequencerBackend {
     #[inline]
     fn tick(&mut self, input: &[f32], output: &mut [f32]) {
         self.handle_messages();
-        self.sequencer.tick(input, output);
         // Tick and process are the only places where events may be pushed to the past vector.
         if !self.sequencer.replay_events() {
             self.send_back_past();
         }
+        if let Some(loop_point) = self.sequencer.loop_point() {
+            if self.sequencer.time() >= loop_point {
+                self.reset();
+            }
+        }
+        self.sequencer.tick(input, output);
     }
 
     fn process(&mut self, size: usize, input: &BufferRef, output: &mut BufferMut) {
         self.handle_messages();
-        self.sequencer.process(size, input, output);
         // Tick and process are the only places where events may be pushed to the past vector.
         if !self.sequencer.replay_events() {
             self.send_back_past();
         }
+        if let Some(loop_point) = self.sequencer.loop_point() {
+            if self.sequencer.time() >= loop_point {
+                self.reset();
+            }
+        }
+        self.sequencer.process(size, input, output);
     }
 
     fn get_id(&self) -> u64 {

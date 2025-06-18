@@ -247,6 +247,8 @@ pub struct Sequencer {
     replay_events: bool,
     /// loop point (in seconds)
     loop_point: Option<f64>,
+    /// is this an internal sequencer of backend
+    is_backend: bool,
 }
 
 impl Clone for Sequencer {
@@ -271,6 +273,7 @@ impl Clone for Sequencer {
             front: None,
             replay_events: self.replay_events,
             loop_point: self.loop_point,
+            is_backend: self.is_backend,
         }
     }
 }
@@ -303,6 +306,7 @@ impl Sequencer {
             front: None,
             replay_events,
             loop_point: None,
+            is_backend: false,
         }
     }
 
@@ -323,6 +327,10 @@ impl Sequencer {
         } else {
             self.loop_point = t;
         }
+    }
+
+    pub fn loop_point(&self) -> Option<f64> {
+        self.loop_point
     }
 
     /// Current time in seconds.
@@ -568,6 +576,7 @@ impl Sequencer {
         let (sender_a, receiver_a) = channel(2048);
         let (sender_b, receiver_b) = channel(2048);
         let mut sequencer = self.clone();
+        sequencer.is_backend = true;
         sequencer.allocate();
         self.front = Some((sender_a, receiver_b));
         SequencerBackend::new(sender_b, receiver_a, sequencer)
@@ -749,9 +758,11 @@ impl AudioUnit for Sequencer {
             }
         }
         self.time = end_time;
-        if let Some(loop_point) = self.loop_point {
-            if self.time >= loop_point {
-                self.reset();
+        if !self.is_backend {
+            if let Some(loop_point) = self.loop_point {
+                if self.time >= loop_point {
+                    self.reset();
+                }
             }
         }
     }
@@ -835,9 +846,11 @@ impl AudioUnit for Sequencer {
             }
         }
         self.time = end_time;
-        if let Some(loop_point) = self.loop_point {
-            if self.time >= loop_point {
-                self.reset();
+        if !self.is_backend {
+            if let Some(loop_point) = self.loop_point {
+                if self.time >= loop_point {
+                    self.reset();
+                }
             }
         }
     }
