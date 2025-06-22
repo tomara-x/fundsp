@@ -354,6 +354,28 @@ impl Sequencer {
         self.time
     }
 
+    /// jump to time (in seconds)
+    pub fn set_time(&mut self, t: f64) {
+        if let Some((sender, _)) = &mut self.front {
+            let _ = sender.try_send(Message::SetTime(t));
+        } else {
+            while let Some(ready) = self.ready.pop() {
+                self.active.push(ready);
+            }
+            while let Some(past) = self.past.pop() {
+                self.active.push(past);
+            }
+            for i in 0..self.active.len() {
+                self.active[i].unit.reset();
+            }
+            while let Some(active) = self.active.pop() {
+                self.ready.push(active);
+            }
+            self.active_map.clear();
+            self.time = t;
+        }
+    }
+
     /// Add an event. All times are specified in seconds.
     /// Fade in and fade out may overlap but may not exceed the duration of the event.
     /// Returns the ID of the event.

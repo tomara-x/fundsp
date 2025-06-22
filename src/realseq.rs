@@ -29,6 +29,8 @@ pub(crate) enum Message {
     SetReplayEvents(bool),
     /// clear all events
     Clear,
+    /// set the sequencer time
+    SetTime(f64),
 }
 
 #[cfg_attr(feature = "crossbeam", derive(Clone))]
@@ -98,6 +100,9 @@ impl SequencerBackend {
                 Message::Clear => {
                     self.send_back_all();
                     self.sequencer.clear();
+                }
+                Message::SetTime(t) => {
+                    self.sequencer.set_time(t);
                 }
             }
         }
