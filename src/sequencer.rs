@@ -359,19 +359,7 @@ impl Sequencer {
         if let Some((sender, _)) = &mut self.front {
             let _ = sender.try_send(Message::SetTime(t));
         } else {
-            while let Some(ready) = self.ready.pop() {
-                self.active.push(ready);
-            }
-            while let Some(past) = self.past.pop() {
-                self.active.push(past);
-            }
-            for i in 0..self.active.len() {
-                self.active[i].unit.reset();
-            }
-            while let Some(active) = self.active.pop() {
-                self.ready.push(active);
-            }
-            self.active_map.clear();
+            self.all_events_to_ready();
             self.time = t;
         }
     }
@@ -642,11 +630,7 @@ impl Sequencer {
         if let Some((sender, _)) = &mut self.front {
             if sender.try_send(Message::Clear).is_ok() {}
         }
-        while let Some(_ready) = self.ready.pop() {}
-        while let Some(_past) = self.past.pop() {}
-        while let Some(_active) = self.active.pop() {}
-        self.edit_map.clear();
-        self.active_map.clear();
+        self.clear_events();
     }
 
     /// Get past events. This is an internal method.
@@ -667,6 +651,30 @@ impl Sequencer {
         }
         None
     }
+
+    fn all_events_to_ready(&mut self) {
+        while let Some(ready) = self.ready.pop() {
+            self.active.push(ready);
+        }
+        while let Some(past) = self.past.pop() {
+            self.active.push(past);
+        }
+        for i in 0..self.active.len() {
+            self.active[i].unit.reset();
+        }
+        while let Some(active) = self.active.pop() {
+            self.ready.push(active);
+        }
+        self.active_map.clear();
+    }
+
+    fn clear_events(&mut self) {
+        while let Some(_ready) = self.ready.pop() {}
+        while let Some(_past) = self.past.pop() {}
+        while let Some(_active) = self.active.pop() {}
+        self.edit_map.clear();
+        self.active_map.clear();
+    }
 }
 
 impl AudioUnit for Sequencer {
@@ -678,25 +686,9 @@ impl AudioUnit for Sequencer {
             return;
         }
         if self.replay_events {
-            while let Some(ready) = self.ready.pop() {
-                self.active.push(ready);
-            }
-            while let Some(past) = self.past.pop() {
-                self.active.push(past);
-            }
-            for i in 0..self.active.len() {
-                self.active[i].unit.reset();
-            }
-            while let Some(active) = self.active.pop() {
-                self.ready.push(active);
-            }
-            self.active_map.clear();
+            self.all_events_to_ready();
         } else {
-            while let Some(_ready) = self.ready.pop() {}
-            while let Some(_past) = self.past.pop() {}
-            while let Some(_active) = self.active.pop() {}
-            self.edit_map.clear();
-            self.active_map.clear();
+            self.clear_events();
         }
         self.time = self.loop_start;
         self.active_threshold = -f64::INFINITY;
