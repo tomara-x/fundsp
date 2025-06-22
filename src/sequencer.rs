@@ -245,8 +245,10 @@ pub struct Sequencer {
     front: Option<(Sender<Message>, Receiver<Option<Event>>)>,
     /// Whether we replay existing events after a call to `reset`.
     replay_events: bool,
-    /// loop point (in seconds)
-    loop_point: Option<f64>,
+    /// loop start (in seconds)
+    loop_start: f64,
+    /// loop end (in seconds)
+    loop_end: f64,
     /// is this an internal sequencer of backend
     is_backend: bool,
 }
@@ -272,7 +274,8 @@ impl Clone for Sequencer {
             tick_buffer: self.tick_buffer.clone(),
             front: None,
             replay_events: self.replay_events,
-            loop_point: self.loop_point,
+            loop_start: self.loop_start,
+            loop_end: self.loop_end,
             is_backend: self.is_backend,
         }
     }
@@ -305,7 +308,8 @@ impl Sequencer {
             tick_buffer: vec![0.0; outputs],
             front: None,
             replay_events,
-            loop_point: None,
+            loop_start: 0.,
+            loop_end: f64::INFINITY,
             is_backend: false,
         }
     }
@@ -315,22 +319,33 @@ impl Sequencer {
         self
     }
 
-    pub fn with_loop_point(mut self, t: f64) -> Self {
-        self.loop_point = Some(t);
+    pub fn with_loop(mut self, start: f64, end: f64) -> Self {
+        self.loop_start = start.min(end);
+        self.loop_end = end.max(start);
         self
     }
 
     /// set loop point
-    pub fn set_loop_point(&mut self, t: Option<f64>) {
+    /// set start to 0 and end to f64::INFINITY for no looping
+    pub fn set_loop(&mut self, start: f64, end: f64) {
+        let s = start.min(end);
+        let e = end.max(start);
         if let Some((sender, _)) = &mut self.front {
-            if sender.try_send(Message::SetLoopPoint(t)).is_ok() {}
+            if sender.try_send(Message::SetLoop((s, e))).is_ok() {}
         } else {
-            self.loop_point = t;
+            self.loop_start = s;
+            self.loop_end = e;
         }
     }
 
-    pub fn loop_point(&self) -> Option<f64> {
-        self.loop_point
+    /// loop start time (in seconds)
+    pub fn loop_start(&self) -> f64 {
+        self.loop_start
+    }
+
+    /// loop end time (in seconds)
+    pub fn loop_end(&self) -> f64 {
+        self.loop_end
     }
 
     /// Current time in seconds.
@@ -661,7 +676,7 @@ impl AudioUnit for Sequencer {
             self.edit_map.clear();
             self.active_map.clear();
         }
-        self.time = 0.0;
+        self.time = self.loop_start;
         self.active_threshold = -f64::INFINITY;
     }
 
@@ -759,10 +774,8 @@ impl AudioUnit for Sequencer {
         }
         self.time = end_time;
         if !self.is_backend {
-            if let Some(loop_point) = self.loop_point {
-                if self.time >= loop_point {
-                    self.reset();
-                }
+            if self.time >= self.loop_end {
+                self.reset();
             }
         }
     }
@@ -847,10 +860,8 @@ impl AudioUnit for Sequencer {
         }
         self.time = end_time;
         if !self.is_backend {
-            if let Some(loop_point) = self.loop_point {
-                if self.time >= loop_point {
-                    self.reset();
-                }
+            if self.time >= self.loop_end {
+                self.reset();
             }
         }
     }

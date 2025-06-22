@@ -4,3 +4,4 @@ Cargo.lock
 /.cargo
 examples/input/target
 examples/input/Cargo.lock
+*.swp

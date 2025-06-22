@@ -24,7 +24,7 @@ pub(crate) enum Message {
     /// Edit event in relative time.
     EditRelative(EventId, Edit),
     /// edit loop point
-    SetLoopPoint(Option<f64>),
+    SetLoop((f64, f64)),
     /// edet replay events flag
     SetReplayEvents(bool),
     /// clear all events
@@ -89,8 +89,8 @@ impl SequencerBackend {
                     self.sequencer
                         .edit_relative(id, edit.end_time, edit.fade_out);
                 }
-                Message::SetLoopPoint(t) => {
-                    self.sequencer.set_loop_point(t);
+                Message::SetLoop((start, end)) => {
+                    self.sequencer.set_loop(start, end);
                 }
                 Message::SetReplayEvents(keep) => {
                     self.sequencer.set_replay_events(keep);
@@ -153,10 +153,8 @@ impl AudioUnit for SequencerBackend {
         if !self.sequencer.replay_events() {
             self.send_back_past();
         }
-        if let Some(loop_point) = self.sequencer.loop_point() {
-            if self.sequencer.time() >= loop_point {
-                self.reset();
-            }
+        if self.sequencer.time() >= self.sequencer.loop_end() {
+            self.reset();
         }
         self.sequencer.tick(input, output);
     }
@@ -167,10 +165,8 @@ impl AudioUnit for SequencerBackend {
         if !self.sequencer.replay_events() {
             self.send_back_past();
         }
-        if let Some(loop_point) = self.sequencer.loop_point() {
-            if self.sequencer.time() >= loop_point {
-                self.reset();
-            }
+        if self.sequencer.time() >= self.sequencer.loop_end() {
+            self.reset();
         }
         self.sequencer.process(size, input, output);
     }
