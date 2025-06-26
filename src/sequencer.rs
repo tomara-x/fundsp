@@ -213,6 +213,7 @@ fn fade_out(
     }
 }
 
+#[cfg_attr(feature = "crossbeam", derive(Clone))]
 /// Sequencer mixes together scheduled audio events.
 pub struct Sequencer {
     /// Current events, unsorted.
@@ -253,6 +254,7 @@ pub struct Sequencer {
     is_backend: bool,
 }
 
+#[cfg(not(feature = "crossbeam"))]
 impl Clone for Sequencer {
     fn clone(&self) -> Self {
         if self.has_backend() {
