@@ -27,6 +27,7 @@ enum SlotMessage {
 }
 
 /// Frontend for an updatable unit slot.
+#[cfg_attr(feature = "crossbeam", derive(Clone))]
 pub struct Slot {
     inputs: usize,
     outputs: usize,
