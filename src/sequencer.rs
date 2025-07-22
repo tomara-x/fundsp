@@ -334,10 +334,9 @@ impl Sequencer {
         let e = end.max(start);
         if let Some((sender, _)) = &mut self.front {
             if sender.try_send(Message::SetLoop((s, e))).is_ok() {}
-        } else {
-            self.loop_start = s;
-            self.loop_end = e;
         }
+        self.loop_start = s;
+        self.loop_end = e;
     }
 
     /// loop start time (in seconds)
@@ -362,8 +361,8 @@ impl Sequencer {
             let _ = sender.try_send(Message::SetTime(t));
         } else {
             self.all_events_to_ready();
-            self.time = t;
         }
+        self.time = t;
     }
 
     /// Add an event. All times are specified in seconds.
