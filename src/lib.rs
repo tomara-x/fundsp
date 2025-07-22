@@ -872,6 +872,7 @@ pub mod system;
 pub mod vertex;
 pub mod wave;
 pub mod wavetable;
+pub mod misc_nodes;
 
 // GenericSequence is for Frame::generate.
 pub use numeric_array::{
