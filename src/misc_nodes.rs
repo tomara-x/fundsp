@@ -438,8 +438,13 @@ impl AudioNode for ShiftReg {
 /// this assumes all steps are non-negative, ordered, and contain range limits
 /// example:
 /// ```
+/// use fundsp::hacker32::*;
 /// // quantize to natural minor (in semis)
-/// Quantizer::new(vec![0., 2., 3., 5., 7., 8., 10., 12.], 12.)
+/// let scale = vec![0., 2., 3., 5., 7., 8., 10., 12.];
+/// let range = 12.;
+/// let mut q = An(Quantizer::new(scale, range));
+/// assert_eq!(q.filter_mono(4.), 3.);
+/// assert_eq!(q.filter_mono(14.), 14.);
 /// ```
 /// - input 0: value to quantize
 /// - output 0: quantized value
