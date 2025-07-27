@@ -3,7 +3,7 @@
 //! don't glob import me!
 //! (do `use fundsp::maps;` and call functions as `maps::function()` instead)
 
-use super::audionode::*;
+use super::audionode::AudioNode;
 use super::combinator::An;
 use super::hacker32::{map, pass, tick};
 use super::math;
@@ -57,6 +57,14 @@ pub fn pow() -> An<impl AudioNode<Inputs = U2, Outputs = U1>> {
 
 pub fn rem_euclid() -> An<impl AudioNode<Inputs = U2, Outputs = U1>> {
     map(|i: &Frame<f32, U2>| i[0].rem_euclid(i[1]))
+}
+
+pub fn rem() -> An<impl AudioNode<Inputs = U2, Outputs = U1>> {
+    map(|i: &Frame<f32, U2>| i[0] % i[1])
+}
+
+pub fn rem2() -> An<impl AudioNode<Inputs = U1, Outputs = U1>> {
+    map(|i: &Frame<f32, U1>| i[0] % 2.)
 }
 
 pub fn log() -> An<impl AudioNode<Inputs = U2, Outputs = U1>> {
