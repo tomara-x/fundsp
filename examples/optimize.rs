@@ -167,9 +167,9 @@ fn main() {
             }
             samples1.sort();
             samples2.sort();
-            println!("{:?}", samples1);
-            println!("{:?}", samples2);
-            println!("{:?}", delays);
+            println!("{samples1:?}");
+            println!("{samples2:?}");
+            println!("{delays:?}");
         }
     }
 }

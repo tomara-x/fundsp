@@ -48,7 +48,7 @@ where
     // Use `assert_no_alloc` to make sure there are no allocations or deallocations in the audio thread.
     let mut next_value = move || assert_no_alloc(|| backend.get_stereo());
 
-    let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
+    let err_fn = |err| eprintln!("an error occurred on stream: {err}");
 
     let stream = device.build_output_stream(
         config,

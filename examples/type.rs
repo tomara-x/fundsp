@@ -37,7 +37,7 @@ fn parse_uint(text: &mut String) {
         for _ in position + 1..i {
             text.remove(position + 1);
         }
-        text.insert_str(position + 1, format!("{}", number).as_str());
+        text.insert_str(position + 1, format!("{number}").as_str());
     }
 }
 
@@ -88,5 +88,5 @@ fn main() {
     remove_string(&mut arg, "typenum::uint::");
     parse_uint(&mut arg);
 
-    println!("\n{}", arg);
+    println!("\n{arg}");
 }
