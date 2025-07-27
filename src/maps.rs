@@ -1,4 +1,5 @@
-//! workaround for situations where using map isn't possible
+//! workaround for situations where using map isn't possible.
+//!
 //! don't glob import me!
 //! (do `use fundsp::maps;` and call functions as `maps::function()` instead)
 
@@ -6,7 +7,7 @@ use super::audionode::*;
 use super::combinator::An;
 use super::hacker32::{map, pass, tick};
 use super::math;
-use super::*;
+use super::Frame;
 use core::num::Wrapping;
 use numeric_array::typenum::*;
 
