@@ -1017,3 +1017,51 @@ impl AudioNode for EuclidSeq {
         self.cursor = 0;
     }
 }
+
+/// output 1 for the given duration, 0 after.
+/// - output 0: gate signal
+#[derive(Clone)]
+pub struct Gate {
+    dur: f64,
+    t: f64,
+    sample_duration: f64,
+    output: f32,
+}
+
+impl Gate {
+    pub fn new(dur: f64) -> Self {
+        let t = 0.;
+        let sample_duration = 1. / DEFAULT_SR;
+        let output = 1.;
+        Gate {
+            dur,
+            t,
+            sample_duration,
+            output,
+        }
+    }
+}
+
+impl AudioNode for Gate {
+    const ID: u64 = 520;
+    type Inputs = U0;
+    type Outputs = U1;
+
+    #[inline]
+    fn tick(&mut self, _input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        if self.t >= self.dur {
+            self.output = 0.;
+        }
+        self.t += self.sample_duration;
+        [self.output].into()
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        self.sample_duration = 1. / sample_rate;
+    }
+
+    fn reset(&mut self) {
+        self.t = 0.;
+        self.output = 1.;
+    }
+}
