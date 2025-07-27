@@ -121,7 +121,7 @@ pub fn gen_lfo(dna: &mut Dna) -> Box<dyn Generated> {
             let f = dna.f32_in("Frequency", 0.05, 0.5) as f64;
             let o = dna.f32("Offset") as f64;
             Box::new(GeneratedLeaf::new(
-                format!("lfo(|t| sin_hz({:?}, t + {:?}) * 0.5 + 0.5)", f, o),
+                format!("lfo(|t| sin_hz({f:?}, t + {o:?}) * 0.5 + 0.5)"),
                 move || Box::new(lfo(move |t| sin_hz(f, t + o) * 0.5 + 0.5)),
             ))
         }
@@ -129,7 +129,7 @@ pub fn gen_lfo(dna: &mut Dna) -> Box<dyn Generated> {
             let seed = dna.u32("Seed");
             let f = dna.f32_in("Frequency", 0.5, 1.0) as f64;
             Box::new(GeneratedLeaf::new(
-                format!("lfo(|t| spline_noise({:?}, t * {:?}) * 0.5 + 0.5)", seed, f),
+                format!("lfo(|t| spline_noise({seed:?}, t * {f:?}) * 0.5 + 0.5)"),
                 move || Box::new(lfo(move |t| spline_noise(seed as u64, t * f) * 0.5 + 0.5)),
             ))
         }

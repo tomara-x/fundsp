@@ -12,7 +12,7 @@
     clippy::type_complexity,
     clippy::float_cmp,
     clippy::len_zero,
-    clippy::double_neg,
+    double_negations,
     clippy::needless_range_loop,
     clippy::manual_range_contains,
     clippy::too_many_arguments,

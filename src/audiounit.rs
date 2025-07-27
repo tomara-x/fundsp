@@ -319,9 +319,9 @@ pub trait AudioUnit: Send + Sync + DynClone {
                 let line = String::from_utf8(ascii_line).unwrap();
                 if row & 1 == 0 {
                     let db = round(max_db - row as f64 * 5.0) as i64;
-                    writeln!(&mut string, "{:3} dB {} {:3} dB", db, line, db).unwrap();
+                    writeln!(&mut string, "{db:3} dB {line} {db:3} dB").unwrap();
                 } else {
-                    writeln!(&mut string, "       {}", line).unwrap();
+                    writeln!(&mut string, "       {line}").unwrap();
                 }
             }
 

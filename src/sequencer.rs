@@ -788,10 +788,8 @@ impl AudioUnit for Sequencer {
             }
         }
         self.time = end_time;
-        if !self.is_backend {
-            if self.time >= self.loop_end {
-                self.reset();
-            }
+        if !self.is_backend && self.time >= self.loop_end {
+            self.reset();
         }
     }
 
@@ -874,10 +872,8 @@ impl AudioUnit for Sequencer {
             }
         }
         self.time = end_time;
-        if !self.is_backend {
-            if self.time >= self.loop_end {
-                self.reset();
-            }
+        if !self.is_backend && self.time >= self.loop_end {
+            self.reset();
         }
     }
 

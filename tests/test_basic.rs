@@ -6,7 +6,7 @@
     clippy::type_complexity,
     clippy::float_cmp,
     clippy::len_zero,
-    clippy::double_neg,
+    double_negations,
     clippy::many_single_char_names,
     clippy::manual_range_contains
 )]
@@ -30,17 +30,11 @@ fn check_wave(mut node: impl AudioUnit) {
         let process_y = wave.at(1, i);
         let tolerance = 1.0e-4;
         if tick_x - tolerance > process_x || tick_x + tolerance < process_x {
-            eprintln!(
-                "channel 0 index {} tick {} process {}",
-                i, tick_x, process_x
-            );
+            eprintln!("channel 0 index {i} tick {tick_x} process {process_x}");
         }
         assert!(tick_x - tolerance <= process_x && tick_x + tolerance >= process_x);
         if tick_y - tolerance > process_y || tick_y + tolerance < process_y {
-            eprintln!(
-                "channel 1 index {} tick {} process {}",
-                i, tick_y, process_y
-            );
+            eprintln!("channel 1 index {i} tick {tick_y} process {process_y}");
         }
         assert!(tick_y - tolerance <= process_y && tick_y + tolerance >= process_y);
     }

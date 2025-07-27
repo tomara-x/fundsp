@@ -735,6 +735,12 @@ pub struct SnH {
     val: f32,
 }
 
+impl Default for SnH {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SnH {
     pub fn new() -> Self {
         SnH { val: 0. }
@@ -940,6 +946,12 @@ pub struct EuclidSeq {
     pulses: usize,
     rotation: isize,
     cursor: usize,
+}
+
+impl Default for EuclidSeq {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl EuclidSeq {

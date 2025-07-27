@@ -6,7 +6,7 @@
     clippy::type_complexity,
     clippy::float_cmp,
     clippy::len_zero,
-    clippy::double_neg,
+    double_negations,
     clippy::many_single_char_names,
     clippy::manual_range_contains
 )]

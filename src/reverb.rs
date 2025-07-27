@@ -17,7 +17,7 @@ use alloc::vec::Vec;
 pub fn generate_reverb(dna: &mut Dna) -> An<impl AudioNode<Inputs = U2, Outputs = U2>> {
     let mut times = Vec::new();
     for i in 0..32 {
-        let name = format!("Delay {}", i);
+        let name = format!("Delay {i}");
         if i < 32 {
             times.push(dna.f32_in(&name, 0.030, 0.070));
         } else {
