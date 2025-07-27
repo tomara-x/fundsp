@@ -2,13 +2,13 @@
 //! don't glob import me!
 //! (do `use fundsp::maps;` and call functions as `maps::function()` instead)
 
-use super::hacker32::{map, tick, pass};
-use super::combinator::An;
 use super::audionode::*;
+use super::combinator::An;
+use super::hacker32::{map, pass, tick};
 use super::math;
 use super::*;
-use numeric_array::typenum::*;
 use core::num::Wrapping;
+use numeric_array::typenum::*;
 
 pub fn rise() -> An<impl AudioNode<Inputs = U1, Outputs = U1>> {
     (pass() ^ tick()) >> map(|i: &Frame<f32, U2>| f32::from(i[0] > i[1]))
@@ -246,7 +246,7 @@ pub fn recip() -> An<impl AudioNode<Inputs = U1, Outputs = U1>> {
 
 /// pass input unchanged, but replace nan/inf/subnormals with zeros
 pub fn normal() -> An<impl AudioNode<Inputs = U1, Outputs = U1>> {
-    map(|i: &Frame<f32, U1>| if i[0].is_normal() {i[0]} else {0.})
+    map(|i: &Frame<f32, U1>| if i[0].is_normal() { i[0] } else { 0. })
 }
 
 pub fn sin() -> An<impl AudioNode<Inputs = U1, Outputs = U1>> {

@@ -844,7 +844,9 @@ pub mod gen;
 pub mod granular;
 pub mod hacker;
 pub mod hacker32;
+pub mod maps;
 pub mod math;
+pub mod misc_nodes;
 pub mod moog;
 pub mod net;
 pub mod noise;
@@ -872,8 +874,6 @@ pub mod system;
 pub mod vertex;
 pub mod wave;
 pub mod wavetable;
-pub mod misc_nodes;
-pub mod maps;
 
 // GenericSequence is for Frame::generate.
 pub use numeric_array::{

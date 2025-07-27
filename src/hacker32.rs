@@ -19,6 +19,7 @@ pub use super::fir::*;
 pub use super::follow::*;
 pub use super::granular::*;
 pub use super::math::*;
+pub use super::misc_nodes::*;
 pub use super::moog::*;
 pub use super::net::*;
 pub use super::noise::*;
@@ -42,7 +43,6 @@ pub use super::svf::*;
 pub use super::system::*;
 pub use super::wave::*;
 pub use super::wavetable::*;
-pub use super::misc_nodes::*;
 pub use super::*;
 
 // Import some typenum integers for reporting arities.

@@ -1,9 +1,9 @@
 //! various nodes/units (some are WIP)
 
-use super::fft::*;
 use super::audionode::*;
 use super::audiounit::*;
 use super::buffer::*;
+use super::fft::*;
 use super::math::*;
 use super::signal::*;
 use super::*;
@@ -18,7 +18,7 @@ pub use buff_nodes::*;
 #[cfg(feature = "crossbeam")]
 mod buff_nodes {
     use super::*;
-    use crossbeam_channel::{Sender, Receiver};
+    use crossbeam_channel::{Receiver, Sender};
     /// send samples to crossbeam channel
     /// use this and [`BuffOut`] with a crossbeam channel to make an audio portal
     /// that you can put either end of in any part of your graph
@@ -47,14 +47,14 @@ mod buff_nodes {
         const ID: u64 = 1123;
         type Inputs = U1;
         type Outputs = U1;
-    
+
         #[inline]
         fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
             let _ = self.s.try_send(input[0]);
             [input[0]].into()
         }
     }
-    
+
     /// receive samples from crossbeam channel
     /// - output 0: output
     #[derive(Clone)]
@@ -70,7 +70,7 @@ mod buff_nodes {
         const ID: u64 = 1124;
         type Inputs = U0;
         type Outputs = U1;
-    
+
         #[inline]
         fn tick(&mut self, _input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
             [self.r.try_recv().unwrap_or_default()].into()
@@ -301,7 +301,11 @@ pub struct Seq {
 
 impl Seq {
     pub fn new(units: Vec<Box<dyn AudioUnit>>) -> Self {
-        Seq { units, events: Vec::with_capacity(1024), sr: 44100. }
+        Seq {
+            units,
+            events: Vec::with_capacity(1024),
+            sr: 44100.,
+        }
     }
 }
 
@@ -498,7 +502,16 @@ impl Kr {
         let out_buffer = vec![0.; outputs];
         let in_buffer = vec![0.; inputs];
         let n = std::cmp::Ord::max(n, 1);
-        Kr { x, n, out_buffer, in_buffer, count: 0, inputs, outputs, preserve_time }
+        Kr {
+            x,
+            n,
+            out_buffer,
+            in_buffer,
+            count: 0,
+            inputs,
+            outputs,
+            preserve_time,
+        }
     }
 }
 
@@ -588,7 +601,12 @@ pub struct Reset {
 
 impl Reset {
     pub fn new(unit: Box<dyn AudioUnit>, s: f32) -> Self {
-        Reset { unit, dur: s, n: (s * 44100.).round() as usize, count: 0 }
+        Reset {
+            unit,
+            dur: s,
+            n: (s * 44100.).round() as usize,
+            count: 0,
+        }
     }
 }
 
@@ -672,7 +690,11 @@ pub struct ResetV {
 
 impl ResetV {
     pub fn new(unit: Box<dyn AudioUnit>) -> Self {
-        ResetV { unit, count: 0, sr: 44100. }
+        ResetV {
+            unit,
+            count: 0,
+            sr: 44100.,
+        }
     }
 }
 
