@@ -78,6 +78,8 @@ struct State {
     snoop1: Snoop,
     /// octave offset
     octave: f64,
+    /// semitone offset
+    semi: f64,
 }
 
 static KEYS: [Key; 29] = [
@@ -223,6 +225,7 @@ where
         snoop0,
         snoop1,
         octave: 0.,
+        semi: 0.,
     };
 
     eframe::run_native(
@@ -280,15 +283,25 @@ impl eframe::App for State {
             });
             ui.separator();
 
-            ui.label("octave shift");
-            ui.add(egui::Slider::new(&mut self.octave, -5.0..=5.0).step_by(1.));
+            ui.horizontal(|ui| {
+                ui.vertical(|ui| {
+                    ui.label("octave shift");
+                    ui.add(egui::Slider::new(&mut self.octave, -5.0..=5.0).step_by(1.));
+                    if ctx.input(|c| c.key_pressed(Key::ArrowRight) || c.key_pressed(Key::ArrowUp))
+                    {
+                        self.octave += 1.;
+                    }
+                    if ctx.input(|c| c.key_pressed(Key::ArrowLeft) || c.key_pressed(Key::ArrowDown))
+                    {
+                        self.octave -= 1.;
+                    }
+                });
+                ui.vertical(|ui| {
+                    ui.label("semi shift");
+                    ui.add(egui::Slider::new(&mut self.semi, -12.0..=12.0).step_by(0.1));
+                });
+            });
             ui.separator();
-            if ctx.input(|c| c.key_pressed(Key::ArrowRight) || c.key_pressed(Key::ArrowUp)) {
-                self.octave += 1.;
-            }
-            if ctx.input(|c| c.key_pressed(Key::ArrowLeft) || c.key_pressed(Key::ArrowDown)) {
-                self.octave -= 1.;
-            }
 
             ui.label("Vibrato Amount");
             let mut vibrato = self.vibrato_amount * 100.0;
@@ -466,7 +479,7 @@ impl eframe::App for State {
                     }
                 }
                 if ctx.input(|c| c.key_down(KEYS[i])) && self.id[i].is_none() {
-                    let pitch_hz = midi_hz(40.0 + i as f64 + self.octave * 12.);
+                    let pitch_hz = midi_hz(40.0 + i as f64 + self.octave * 12. + self.semi);
                     let v = self.vibrato_amount * 0.006;
                     let pitch = lfo(move |t| {
                         pitch_hz
