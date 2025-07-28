@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use fundsp::hacker32::*;
+use std::hint::black_box;
 
 fn sine_bench(_dummy: usize) -> Wave {
     Wave::render(

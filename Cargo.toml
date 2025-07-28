@@ -13,28 +13,28 @@ edition = "2021"
 
 [dependencies]
 numeric-array = { version = "0.6.1", default-features = false }
-dyn-clone = "1.0.17"
-libm = "0.2.8"
-wide = { version = "0.7.28", default-features = false }
+dyn-clone = "1.0.20"
+libm = "0.2.15"
+wide = { version = "0.7.33", default-features = false }
 num-complex = { version = "0.4.6", default-features = false, features = ["libm"] }
-tinyvec = { version = "1.8.0", features = ["alloc"] }
-hashbrown = "0.15.0"
+tinyvec = { version = "1.9.0", features = ["alloc"] }
+hashbrown = "0.15.4"
 microfft = { version = "0.6.0", features = ["size-32768"] }
-funutd = { version = "0.16.0", default-features = false }
+funutd = { git = "https://github.com/tomara-x/funutd", default-features = false }
 thingbuf = { version = "0.1.6", default-features = false, features = ["alloc"] }
-once_cell = { version = "1.20.1", default-features = false, features = ["race", "alloc"] }
+once_cell = { version = "1.21.3", default-features = false, features = ["race", "alloc"] }
 symphonia = { version = "0.5.4", optional = true, features = ["all"] }
-crossbeam-channel = { version = "0.5.14", optional = true }
+crossbeam-channel = { version = "0.5.15", optional = true }
 
 [dev-dependencies]
-anyhow = "1.0.89"
-criterion = "0.5.1"
-cpal = "0.15.3"
+anyhow = "1.0.98"
+criterion = "0.7.0"
+cpal = "0.16.0"
 assert_no_alloc = "1.1.2"
-eframe = "0.29.1"
+eframe = "0.32.0"
 plotters = "0.3.7"
-midi-msg = "0.5.0"
-midir = "0.9.1"
+midi-msg = "0.8.0"
+midir = "0.10.1"
 read_input = "0.8.6"
 rayon = "1.10.0"
 
