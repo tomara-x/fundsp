@@ -23,13 +23,15 @@ mod buff_nodes {
     /// use this and [`BuffOut`] with a crossbeam channel to make an audio portal
     /// that you can put either end of in any part of your graph
     /// (channel must have capacity larger than the audio stream buffer size)
+    /// example:
     /// ```
+    /// use fundsp::hacker32::*;
     /// let (s, r) = crossbeam_channel::bounded(1);
     /// let i = An(BuffIn::new(s));
     /// let o = An(BuffOut::new(r));
     /// let mut feedback_graph = (o+pass()) >> i;
-    /// println!("{:?}", feedback_graph.tick(&Frame::from([1.])));
-    /// println!("{:?}", feedback_graph.tick(&Frame::from([1.])));
+    /// assert_eq!(feedback_graph.filter_mono(1.), 1.);
+    /// assert_eq!(feedback_graph.filter_mono(1.), 2.);
     /// ```
     ///
     /// - input 0: input
