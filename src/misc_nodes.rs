@@ -22,8 +22,10 @@ mod buff_nodes {
     use crossbeam_channel::{Receiver, Sender};
     /// send samples to crossbeam channel
     /// use this and [`BuffOut`] with a crossbeam channel to make an audio portal
-    /// that you can put either end of in any part of your graph
-    /// (channel must have capacity larger than the audio stream buffer size)
+    /// that you can put either end of in any part of your graph.
+    /// channel's capacity must be enough to hold the number of samples being processed at a time.
+    /// (64 if using BlockRateAdapter)
+    /// example:
     /// ```
     /// let (s, r) = crossbeam_channel::bounded(1);
     /// let i = An(BuffIn::new(s));
@@ -1088,6 +1090,15 @@ impl AudioNode for Gate {
 /// both nodes must be used in the same thread, otherwise it's undefined behavior.
 /// (use snoop/ring/BuffIn/BuffOut if you want different ends to be on different threads)
 /// this is cheaper than BuffIn/BuffOut
+/// ```
+/// let (i, o) = buffer(64);
+/// // feedback
+/// let mut g = (o + pass()) >> i;
+/// // feedback with loopback processing
+/// let mut g = ((o >> delay(1.) >> mul(0.5)) + pass()) >> i;
+/// // pass
+/// let mut g = i >> sink() | o;
+/// ```
 pub fn buffer(capacity: usize) -> (An<BufferWrite>, An<BufferRead>) {
     let vec = vec![0.; capacity];
     let arc1 = Arc::new(vec);
