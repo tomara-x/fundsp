@@ -3,6 +3,7 @@
 use super::audionode::*;
 use super::audiounit::*;
 use super::buffer::*;
+use super::combinator::An;
 use super::fft::*;
 use super::math::*;
 use super::signal::*;
@@ -1080,5 +1081,64 @@ impl AudioNode for Gate {
     fn reset(&mut self) {
         self.t = 0.;
         self.output = 1.;
+    }
+}
+
+/// create a buffer (with capacity) and return writer and reader nodes.
+/// both nodes must be used in the same thread, otherwise it's undefined behavior.
+/// (use snoop/ring/BuffIn/BuffOut if you want different ends to be on different threads)
+/// this is cheaper than BuffIn/BuffOut
+pub fn buffer(capacity: usize) -> (An<BufferWrite>, An<BufferRead>) {
+    let vec = vec![0.; capacity];
+    let arc1 = Arc::new(vec);
+    let arc2 = Arc::clone(&arc1);
+    let w = An(BufferWrite { buffer: arc1, i: 0 });
+    let r = An(BufferRead { buffer: arc2, i: 0 });
+    (w, r)
+}
+
+#[derive(Clone)]
+pub struct BufferWrite {
+    buffer: Arc<Vec<f32>>,
+    i: usize,
+}
+impl AudioNode for BufferWrite {
+    const ID: u64 = 2440;
+    type Inputs = U1;
+    type Outputs = U1;
+
+    #[inline]
+    fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        let ptr = Arc::as_ptr(&self.buffer).cast_mut();
+        // SAFETY: we asked the user to keep both nodes in the audio thread.
+        // if they did, then only one node is being processed at any given time.
+        let buffer = unsafe { &mut *ptr };
+        buffer[self.i] = input[0];
+        self.i = self.i.wrapping_add(1);
+        if self.i >= buffer.len() {
+            self.i = 0;
+        }
+        *input
+    }
+}
+
+#[derive(Clone)]
+pub struct BufferRead {
+    buffer: Arc<Vec<f32>>,
+    i: usize,
+}
+impl AudioNode for BufferRead {
+    const ID: u64 = 493;
+    type Inputs = U0;
+    type Outputs = U1;
+
+    #[inline]
+    fn tick(&mut self, _input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        let output = self.buffer[self.i];
+        self.i = self.i.wrapping_add(1);
+        if self.i >= self.buffer.len() {
+            self.i = 0;
+        }
+        [output].into()
     }
 }
