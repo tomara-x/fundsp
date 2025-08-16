@@ -27,12 +27,13 @@ mod buff_nodes {
     /// (64 if using BlockRateAdapter)
     /// example:
     /// ```
+    /// use fundsp::hacker32::*;
     /// let (s, r) = crossbeam_channel::bounded(1);
     /// let i = An(BuffIn::new(s));
     /// let o = An(BuffOut::new(r));
     /// let mut feedback_graph = (o+pass()) >> i;
-    /// println!("{:?}", feedback_graph.tick(&Frame::from([1.])));
-    /// println!("{:?}", feedback_graph.tick(&Frame::from([1.])));
+    /// assert_eq!(feedback_graph.filter_mono(1.), 1.);
+    /// assert_eq!(feedback_graph.filter_mono(1.), 2.);
     /// ```
     ///
     /// - input 0: input
