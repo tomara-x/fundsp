@@ -234,6 +234,12 @@ impl AudioNode for Select {
             unit.reset();
         }
     }
+
+    fn allocate(&mut self) {
+        for unit in self.units.iter_mut() {
+            unit.allocate();
+        }
+    }
 }
 
 /// fading switch between units based on index.
@@ -284,6 +290,12 @@ impl AudioNode for FadeSelect {
     fn reset(&mut self) {
         for unit in &mut self.units {
             unit.reset();
+        }
+    }
+
+    fn allocate(&mut self) {
+        for unit in self.units.iter_mut() {
+            unit.allocate();
         }
     }
 }
@@ -364,6 +376,12 @@ impl AudioNode for Seq {
     fn reset(&mut self) {
         for unit in &mut self.units {
             unit.reset();
+        }
+    }
+
+    fn allocate(&mut self) {
+        for unit in self.units.iter_mut() {
+            unit.allocate();
         }
     }
 }
@@ -645,6 +663,10 @@ impl AudioNode for Reset {
         self.count = 0;
         self.unit.reset();
     }
+
+    fn allocate(&mut self) {
+        self.unit.allocate();
+    }
 }
 
 /// reset unit when triggered.
@@ -683,6 +705,10 @@ impl AudioNode for TrigReset {
 
     fn reset(&mut self) {
         self.unit.reset();
+    }
+
+    fn allocate(&mut self) {
+        self.unit.allocate();
     }
 }
 
@@ -732,6 +758,10 @@ impl AudioNode for ResetV {
     fn reset(&mut self) {
         self.count = 0;
         self.unit.reset();
+    }
+
+    fn allocate(&mut self) {
+        self.unit.allocate();
     }
 }
 
