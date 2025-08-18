@@ -515,6 +515,22 @@ pub fn saw_table() -> Arc<Wavetable> {
         .clone()
 }
 
+pub fn sine_table() -> Arc<Wavetable> {
+    static INSTANCE: OnceBox<Arc<Wavetable>> = OnceBox::new();
+    INSTANCE
+        .get_or_init(|| {
+            let table = Wavetable::new(20.0, 20_000.0, 4.0, &|_| 0.0, &|_, i| {
+                if i == 1 {
+                    1.0
+                } else {
+                    0.0
+                }
+            });
+            Box::new(Arc::new(table))
+        })
+        .clone()
+}
+
 pub fn square_table() -> Arc<Wavetable> {
     static INSTANCE: OnceBox<Arc<Wavetable>> = OnceBox::new();
     INSTANCE
