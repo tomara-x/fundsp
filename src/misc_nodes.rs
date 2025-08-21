@@ -271,7 +271,8 @@ impl AudioNode for FadeSelect {
             unit.tick(&[], &mut buffer);
             let fract = input[0].fract();
             if fract != 0. {
-                if let Some(unit) = self.units.get_mut(index + 1) {
+                let len = self.units.len();
+                if let Some(unit) = self.units.get_mut((index + 1) % len) {
                     let mut tmp = [0.];
                     unit.tick(&[], &mut tmp);
                     buffer[0] = lerp(buffer[0], tmp[0], fract);
