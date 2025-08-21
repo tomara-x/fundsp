@@ -1184,3 +1184,133 @@ impl AudioNode for BufferRead {
         [output].into()
     }
 }
+
+/// outputs impulses at specified times.
+/// (times are relative)
+/// - output 0: impulses
+///
+/// example:
+/// ```
+/// // impulse after 1 sec, another after 1 sec, anothe after 2 secs, etc
+/// Unsteady::new(vec![1., 1., 2., 1.], false);
+/// ```
+#[derive(Clone)]
+pub struct Unsteady {
+    times: Vec<f32>,
+    looping: bool,
+    step: usize,
+    progress: f32,
+    sample_duration: f32,
+}
+
+impl Unsteady {
+    pub fn new(times: Vec<f32>, looping: bool) -> Self {
+        Self {
+            times,
+            looping,
+            step: 0,
+            progress: 0.,
+            sample_duration: 1. / 44100.,
+        }
+    }
+}
+
+impl AudioNode for Unsteady {
+    const ID: u64 = 1210121;
+    type Inputs = U0;
+    type Outputs = U1;
+
+    #[inline]
+    fn tick(&mut self, _input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        let mut out = 0.;
+        if let Some(step_time) = self.times.get(self.step) {
+            if self.progress >= *step_time {
+                out = 1.;
+                self.progress = 0.;
+                self.step = self.step.wrapping_add(1);
+                if self.looping && self.step >= self.times.len() {
+                    self.step = 0;
+                }
+            }
+            self.progress += self.sample_duration;
+        }
+        [out].into()
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        self.sample_duration = 1. / sample_rate as f32;
+    }
+
+    fn reset(&mut self) {
+        self.step = 0;
+        self.progress = 0.;
+    }
+}
+
+/// ramp that goes one interger up for each of the given durations.
+/// - output 0: ramp
+///
+/// example:
+/// ```
+/// // one second to get to 1, another to get to 2, then 2 seconds to get to 3, etc
+/// UnsteadyRamp::new(vec![1., 1., 2., 1.], false);
+/// ```
+#[derive(Clone)]
+pub struct UnsteadyRamp {
+    freqs: Vec<f32>,
+    looping: bool,
+    step: usize,
+    step_phase: f32,
+    sample_duration: f32,
+}
+
+impl UnsteadyRamp {
+    pub fn new(times: Vec<f32>, looping: bool) -> Self {
+        let mut freqs = Vec::new();
+        for t in times {
+            let f = t.recip();
+            if f.is_normal() {
+                freqs.push(f.abs());
+            }
+        }
+        Self {
+            freqs,
+            looping,
+            step: 0,
+            step_phase: 0.,
+            sample_duration: 1. / 44100.,
+        }
+    }
+}
+
+impl AudioNode for UnsteadyRamp {
+    const ID: u64 = 110200;
+    type Inputs = U0;
+    type Outputs = U1;
+
+    #[inline]
+    fn tick(&mut self, _input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        let mut out = 0.;
+        if let Some(step_freq) = self.freqs.get(self.step) {
+            out = self.step as f32 + self.step_phase;
+            self.step_phase += self.sample_duration * *step_freq;
+            if self.step_phase >= 1. {
+                self.step_phase = 0.;
+                self.step = self.step.wrapping_add(1);
+                if self.looping && self.step >= self.freqs.len() {
+                    self.step = 0;
+                }
+            }
+        }
+        [out].into()
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        self.sample_duration = 1. / sample_rate as f32;
+    }
+
+    fn reset(&mut self) {
+        self.step = 0;
+        self.step_phase = 0.;
+    }
+}
