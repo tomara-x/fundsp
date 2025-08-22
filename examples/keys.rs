@@ -13,6 +13,7 @@ use funutd::Rnd;
 enum Waveform {
     Sine,
     Saw,
+    SoftSaw,
     Square,
     Triangle,
     Organ,
@@ -268,6 +269,7 @@ impl eframe::App for State {
             ui.horizontal(|ui| {
                 ui.selectable_value(&mut self.waveform, Waveform::Sine, "Sine");
                 ui.selectable_value(&mut self.waveform, Waveform::Saw, "Saw");
+                ui.selectable_value(&mut self.waveform, Waveform::SoftSaw, "Soft Saw");
                 ui.selectable_value(&mut self.waveform, Waveform::Square, "Square");
                 ui.selectable_value(&mut self.waveform, Waveform::Triangle, "Triangle");
                 ui.selectable_value(&mut self.waveform, Waveform::Organ, "Organ");
@@ -492,6 +494,7 @@ impl eframe::App for State {
                     let waveform = match self.waveform {
                         Waveform::Sine => Net::wrap(Box::new(pitch * 2.0 >> sine() * 0.1)),
                         Waveform::Saw => Net::wrap(Box::new(pitch >> saw() * 0.2)),
+                        Waveform::SoftSaw => Net::wrap(Box::new(pitch >> soft_saw() * 0.2)),
                         Waveform::Square => Net::wrap(Box::new(pitch >> square() * 0.2)),
                         Waveform::Triangle => Net::wrap(Box::new(pitch >> triangle() * 0.2)),
                         Waveform::Organ => Net::wrap(Box::new(pitch >> organ() * 0.2)),
