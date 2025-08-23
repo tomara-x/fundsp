@@ -168,7 +168,7 @@ where
     let delay_time = shared(0.);
 
     let delay =
-        feedback((pass() | var(&delay_time)) >> tap(0., 30.) * var(&feedback_amount)) >> clip();
+        feedback((pass() | var(&delay_time)) >> tap(0., 30.) >> clip() * var(&feedback_amount));
     let mut net = Net::wrap(Box::new(sequencer_backend));
     let (reverb, reverb_id) = Net::wrap_id(create_reverb(room_size, reverb_time, reverb_diffusion));
     let (phaser, phaser_id) = Net::wrap_id(Box::new(multipass::<U2>()));
