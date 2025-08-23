@@ -81,6 +81,10 @@ struct State {
     octave: f64,
     /// semitone offset
     semi: f64,
+    /// feedback delay time
+    delay_time: Shared,
+    /// feedback amount
+    feedback_amount: Shared,
 }
 
 static KEYS: [Key; 29] = [
@@ -122,7 +126,6 @@ fn main() {
         .default_output_device()
         .expect("failed to find a default output device");
     let config = device.default_output_config().unwrap();
-
     match config.sample_format() {
         cpal::SampleFormat::F32 => run::<f32>(&device, &config.into()).unwrap(),
         cpal::SampleFormat::I16 => run::<i16>(&device, &config.into()).unwrap(),
@@ -161,8 +164,12 @@ where
     let reverb_time = 2.0;
     let reverb_diffusion = 0.5;
     let chorus_amount = shared(1.0);
+    let feedback_amount = shared(0.);
+    let delay_time = shared(0.);
 
+    let delay = feedback((pass() | var(&delay_time)) >> tap(0., 30.) * var(&feedback_amount));
     let mut net = Net::wrap(Box::new(sequencer_backend));
+    net = net >> (pass() & delay);
     let (reverb, reverb_id) = Net::wrap_id(create_reverb(room_size, reverb_time, reverb_diffusion));
     let (phaser, phaser_id) = Net::wrap_id(Box::new(multipass::<U2>()));
     let (flanger, flanger_id) = Net::wrap_id(Box::new(multipass::<U2>()));
@@ -227,6 +234,8 @@ where
         snoop1,
         octave: 0.,
         semi: 0.,
+        feedback_amount,
+        delay_time,
     };
 
     eframe::run_native(
@@ -301,6 +310,18 @@ impl eframe::App for State {
                 ui.vertical(|ui| {
                     ui.label("semi shift");
                     ui.add(egui::Slider::new(&mut self.semi, -12.0..=12.0).step_by(0.1));
+                });
+                ui.vertical(|ui| {
+                    ui.label("delay time");
+                    let mut delay = self.delay_time.value();
+                    ui.add(egui::Slider::new(&mut delay, 0.0..=30.0).step_by(0.01));
+                    self.delay_time.set(delay);
+                });
+                ui.vertical(|ui| {
+                    ui.label("feedback");
+                    let mut feedback = self.feedback_amount.value();
+                    ui.add(egui::Slider::new(&mut feedback, 0.0..=2.0).step_by(0.001));
+                    self.feedback_amount.set(feedback);
                 });
             });
             ui.separator();
