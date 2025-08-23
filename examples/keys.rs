@@ -167,9 +167,9 @@ where
     let feedback_amount = shared(0.);
     let delay_time = shared(0.);
 
-    let delay = feedback((pass() | var(&delay_time)) >> tap(0., 30.) * var(&feedback_amount));
+    let delay =
+        feedback((pass() | var(&delay_time)) >> tap(0., 30.) * var(&feedback_amount)) >> clip();
     let mut net = Net::wrap(Box::new(sequencer_backend));
-    net = net >> (pass() & delay);
     let (reverb, reverb_id) = Net::wrap_id(create_reverb(room_size, reverb_time, reverb_diffusion));
     let (phaser, phaser_id) = Net::wrap_id(Box::new(multipass::<U2>()));
     let (flanger, flanger_id) = Net::wrap_id(Box::new(multipass::<U2>()));
@@ -184,6 +184,7 @@ where
     net = net
         >> ((1.0 - var(&reverb_amount) >> follow(0.01) >> split::<U2>()) * multipass()
             & (var(&reverb_amount) >> follow(0.01) >> split::<U2>()) * reverb)
+        >> ((pass() | pass()) & (delay.clone() | delay))
         >> (snoop_backend0 | snoop_backend1);
 
     net.set_sample_rate(sample_rate);
