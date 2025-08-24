@@ -85,6 +85,8 @@ struct State {
     delay_time: Shared,
     /// feedback amount
     feedback_amount: Shared,
+    /// bypass feedback
+    bypass: Shared,
 }
 
 static KEYS: [Key; 29] = [
@@ -166,9 +168,10 @@ where
     let chorus_amount = shared(1.0);
     let feedback_amount = shared(0.);
     let delay_time = shared(0.);
+    let bypass = shared(1.);
 
-    let delay =
-        feedback((pass() | var(&delay_time)) >> tap(0., 30.) >> clip() * var(&feedback_amount));
+    let delay = pass() * var(&bypass)
+        >> feedback((pass() | var(&delay_time)) >> tap(0., 30.) >> clip() * var(&feedback_amount));
     let mut net = Net::wrap(Box::new(sequencer_backend));
     let (reverb, reverb_id) = Net::wrap_id(create_reverb(room_size, reverb_time, reverb_diffusion));
     let (phaser, phaser_id) = Net::wrap_id(Box::new(multipass::<U2>()));
@@ -237,6 +240,7 @@ where
         semi: 0.,
         feedback_amount,
         delay_time,
+        bypass,
     };
 
     eframe::run_native(
@@ -464,6 +468,10 @@ impl eframe::App for State {
                     ui.add(egui::Slider::new(&mut feedback, 0.0..=2.0).step_by(0.001));
                     self.feedback_amount.set(feedback);
                 });
+                ui.separator();
+                let mut bypass = self.bypass.value() == 0.;
+                ui.toggle_value(&mut bypass, "bypass");
+                self.bypass.set(f32::from(!bypass));
             });
             ui.separator();
 
