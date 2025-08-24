@@ -312,18 +312,6 @@ impl eframe::App for State {
                     ui.label("semi shift");
                     ui.add(egui::Slider::new(&mut self.semi, -12.0..=12.0).step_by(0.1));
                 });
-                ui.vertical(|ui| {
-                    ui.label("delay time");
-                    let mut delay = self.delay_time.value();
-                    ui.add(egui::Slider::new(&mut delay, 0.0..=30.0).step_by(0.01));
-                    self.delay_time.set(delay);
-                });
-                ui.vertical(|ui| {
-                    ui.label("feedback");
-                    let mut feedback = self.feedback_amount.value();
-                    ui.add(egui::Slider::new(&mut feedback, 0.0..=2.0).step_by(0.001));
-                    self.feedback_amount.set(feedback);
-                });
             });
             ui.separator();
 
@@ -417,19 +405,31 @@ impl eframe::App for State {
                 }
             }
 
-            ui.label("Reverb Amount");
             let mut reverb = self.reverb_amount.value() * 100.0;
-            ui.add(egui::Slider::new(&mut reverb, 0.0..=100.0).suffix("%"));
-            self.reverb_amount.set_value(reverb * 0.01);
             let mut reverb_time = self.reverb_time;
             let mut room_size = self.room_size;
             let mut reverb_diffusion = self.reverb_diffusion;
-            ui.label("Reverb Time");
-            ui.add(egui::Slider::new(&mut reverb_time, 1.0..=10.0).suffix("s"));
-            ui.label("Reverb Room Size");
-            ui.add(egui::Slider::new(&mut room_size, 10.0..=30.0).suffix("m"));
-            ui.label("Reverb Diffusion");
-            ui.add(egui::Slider::new(&mut reverb_diffusion, 0.0..=1.0));
+            ui.horizontal(|ui| {
+                ui.vertical(|ui| {
+                    ui.label("Reverb Amount");
+                    ui.add(egui::Slider::new(&mut reverb, 0.0..=100.0).suffix("%"));
+                });
+                ui.vertical(|ui| {
+                    ui.label("Reverb Time");
+                    ui.add(egui::Slider::new(&mut reverb_time, 1.0..=10.0).suffix("s"));
+                });
+            });
+            ui.horizontal(|ui| {
+                ui.vertical(|ui| {
+                    ui.label("Reverb Room Size");
+                    ui.add(egui::Slider::new(&mut room_size, 10.0..=30.0).suffix("m"));
+                });
+                ui.vertical(|ui| {
+                    ui.label("Reverb Diffusion");
+                    ui.add(egui::Slider::new(&mut reverb_diffusion, 0.0..=1.0));
+                });
+            });
+            self.reverb_amount.set_value(reverb * 0.01);
             if self.room_size != room_size
                 || self.reverb_time != reverb_time
                 || self.reverb_diffusion != reverb_diffusion
@@ -449,6 +449,22 @@ impl eframe::App for State {
                 self.reverb_time = reverb_time;
                 self.reverb_diffusion = reverb_diffusion;
             }
+            ui.separator();
+
+            ui.horizontal(|ui| {
+                ui.vertical(|ui| {
+                    ui.label("delay time");
+                    let mut delay = self.delay_time.value();
+                    ui.add(egui::Slider::new(&mut delay, 0.0..=30.0).step_by(0.01));
+                    self.delay_time.set(delay);
+                });
+                ui.vertical(|ui| {
+                    ui.label("feedback");
+                    let mut feedback = self.feedback_amount.value();
+                    ui.add(egui::Slider::new(&mut feedback, 0.0..=2.0).step_by(0.001));
+                    self.feedback_amount.set(feedback);
+                });
+            });
             ui.separator();
 
             if commit {
