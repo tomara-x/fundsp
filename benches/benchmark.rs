@@ -1,5 +1,6 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use fundsp::hacker32::*;
+use std::hint::black_box;
 
 fn sine_bench(_dummy: usize) -> Wave {
     Wave::render(
@@ -117,6 +118,18 @@ fn lowpass16_bench(_dummy: usize) -> Wave {
     )
 }
 
+fn feedback_bench(g: &mut Net) -> f32 {
+    g.filter_mono(1.)
+}
+
+fn crossbeam_feedback_bench(g: &mut Net) -> f32 {
+    g.filter_mono(1.)
+}
+
+fn arc_feedback_bench(g: &mut Net) -> f32 {
+    g.filter_mono(1.)
+}
+
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("netpass", |b| b.iter(|| netpass_bench(black_box(0))));
     c.bench_function("sine", |b| b.iter(|| sine_bench(black_box(0))));
@@ -132,6 +145,23 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("phaser", |b| b.iter(|| phaser_bench(black_box(0))));
     c.bench_function("lowpass", |b| b.iter(|| lowpass_bench(black_box(0))));
     c.bench_function("lowpass16", |b| b.iter(|| lowpass16_bench(black_box(0))));
+
+    c.bench_function("feedback", |b| {
+        let mut g = Net::wrap(Box::new(feedback(pass())));
+        b.iter(|| feedback_bench(black_box(&mut g)))
+    });
+    c.bench_function("cb feedback", |b| {
+        let (s, r) = crossbeam_channel::bounded(128);
+        let i = An(BuffIn::new(s));
+        let o = An(BuffOut::new(r));
+        let mut g = Net::wrap(Box::new((o + pass()) >> i));
+        b.iter(|| crossbeam_feedback_bench(black_box(&mut g)))
+    });
+    c.bench_function("arc feedback", |b| {
+        let (i, o) = buffer(128);
+        let mut g = Net::wrap(Box::new((o + pass()) >> i));
+        b.iter(|| arc_feedback_bench(black_box(&mut g)))
+    });
 }
 
 criterion_group!(benches, criterion_benchmark);
