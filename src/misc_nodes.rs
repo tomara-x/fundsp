@@ -1263,6 +1263,7 @@ pub struct UnsteadyRamp {
     step: usize,
     step_phase: f32,
     sample_duration: f32,
+    out: f32,
 }
 
 impl UnsteadyRamp {
@@ -1280,6 +1281,7 @@ impl UnsteadyRamp {
             step: 0,
             step_phase: 0.,
             sample_duration: 1. / 44100.,
+            out: 0.,
         }
     }
 }
@@ -1291,9 +1293,8 @@ impl AudioNode for UnsteadyRamp {
 
     #[inline]
     fn tick(&mut self, _input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
-        let mut out = 0.;
         if let Some(step_freq) = self.freqs.get(self.step) {
-            out = self.step as f32 + self.step_phase;
+            self.out = self.step as f32 + self.step_phase;
             self.step_phase += self.sample_duration * *step_freq;
             if self.step_phase >= 1. {
                 self.step_phase = 0.;
@@ -1303,7 +1304,7 @@ impl AudioNode for UnsteadyRamp {
                 }
             }
         }
-        [out].into()
+        [self.out].into()
     }
 
     fn set_sample_rate(&mut self, sample_rate: f64) {
@@ -1313,5 +1314,6 @@ impl AudioNode for UnsteadyRamp {
     fn reset(&mut self) {
         self.step = 0;
         self.step_phase = 0.;
+        self.out = 0.;
     }
 }
