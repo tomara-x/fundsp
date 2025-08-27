@@ -128,7 +128,10 @@ fn main() {
         .default_output_device()
         .expect("failed to find a default output device");
     let config = device.default_output_config().unwrap();
-    match config.sample_format() {
+    let format = config.sample_format();
+    let mut config = config.config();
+    //config.buffer_size = cpal::BufferSize::Fixed(1024);
+    match format {
         cpal::SampleFormat::F32 => run::<f32>(&device, &config.into()).unwrap(),
         cpal::SampleFormat::I16 => run::<i16>(&device, &config.into()).unwrap(),
         cpal::SampleFormat::U16 => run::<u16>(&device, &config.into()).unwrap(),
@@ -487,9 +490,9 @@ impl eframe::App for State {
                 self.snoop1.update();
 
                 let points = 512;
-                let color0 = Color32::from_rgb(180, 200, 220);
-                let color1 = Color32::from_rgb(200, 200, 200);
-                let thickness: f32 = 1.0;
+                let color0 = Color32::from_rgb(10, 202, 250);
+                let color1 = Color32::from_rgb(255, 172, 171);
+                let thickness: f32 = 2.5;
 
                 let desired_size = ui.available_width() * vec2(1.0, 0.25);
                 let (_id, rect) = ui.allocate_space(desired_size);
