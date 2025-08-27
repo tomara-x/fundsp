@@ -87,6 +87,14 @@ struct State {
     feedback_amount: Shared,
     /// bypass feedback
     bypass: Shared,
+    /// pingpong delay left channel time
+    ping_time: Shared,
+    /// pingpong delay right channel time
+    pong_time: Shared,
+    /// pingpong delay left channel attanuation
+    ping_amount: Shared,
+    /// pingpong delay right channel attanuation
+    pong_amount: Shared,
 }
 
 static KEYS: [Key; 29] = [
@@ -172,14 +180,24 @@ where
     let feedback_amount = shared(0.);
     let delay_time = shared(0.);
     let bypass = shared(1.);
+    let ping_time = shared(0.);
+    let pong_time = shared(0.);
+    let ping_amount = shared(0.);
+    let pong_amount = shared(0.);
 
     let delay = pass() * var(&bypass)
         >> feedback((pass() | var(&delay_time)) >> tap(0., 30.) >> clip() * var(&feedback_amount));
+    let pingpong = (pass() | zero())
+        >> feedback(
+            ((pass() | var(&ping_time)) >> tap(0., 10.) >> clip() * var(&ping_amount)
+                | (pass() | var(&pong_time)) >> tap(0., 10.) >> clip() * var(&pong_amount))
+                >> reverse(),
+        );
     let mut net = Net::wrap(Box::new(sequencer_backend));
     let (reverb, reverb_id) = Net::wrap_id(create_reverb(room_size, reverb_time, reverb_diffusion));
     let (phaser, phaser_id) = Net::wrap_id(Box::new(multipass::<U2>()));
     let (flanger, flanger_id) = Net::wrap_id(Box::new(multipass::<U2>()));
-    net = net >> pan(0.0);
+    net = net >> (pan(0.0) & pingpong);
     // Smooth chorus and reverb amounts to prevent discontinuities.
     net = net
         >> ((1.0 - var(&chorus_amount) >> follow(0.01) >> split()) * multipass()
@@ -244,6 +262,10 @@ where
         feedback_amount,
         delay_time,
         bypass,
+        ping_time,
+        pong_time,
+        ping_amount,
+        pong_amount,
     };
 
     eframe::run_native(
@@ -357,6 +379,49 @@ impl eframe::App for State {
                     ui.checkbox(&mut phaser_enabled, "Phaser");
                     ui.checkbox(&mut flanger_enabled, "Flanger");
                 });
+                ui.add_space(10.0);
+                let mut ping_time = self.ping_time.value();
+                let mut pong_time = self.pong_time.value();
+                let mut ping_amount = self.ping_amount.value();
+                let mut pong_amount = self.pong_amount.value();
+                ui.label("ping");
+                ui.vertical(|ui| {
+                    ui.label("time");
+                    ui.add(
+                        egui::DragValue::new(&mut ping_time)
+                            .range(0.0..=10.)
+                            .speed(0.01),
+                    );
+                });
+                ui.vertical(|ui| {
+                    ui.label("amount");
+                    ui.add(
+                        egui::DragValue::new(&mut ping_amount)
+                            .range(0.0..=1.)
+                            .speed(0.01),
+                    );
+                });
+                ui.label("pong");
+                ui.vertical(|ui| {
+                    ui.label("time");
+                    ui.add(
+                        egui::DragValue::new(&mut pong_time)
+                            .range(0.0..=10.)
+                            .speed(0.01),
+                    );
+                });
+                ui.vertical(|ui| {
+                    ui.label("amount");
+                    ui.add(
+                        egui::DragValue::new(&mut pong_amount)
+                            .range(0.0..=1.)
+                            .speed(0.01),
+                    );
+                });
+                self.ping_time.set(ping_time);
+                self.pong_time.set(pong_time);
+                self.ping_amount.set(ping_amount);
+                self.pong_amount.set(pong_amount);
             });
 
             ui.separator();
