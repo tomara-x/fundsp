@@ -299,13 +299,13 @@ pub fn meter(meter: Meter) -> An<MeterNode> {
 }
 
 /// Mono sink. Input is discarded.
-/// -Input 0: signal
+/// - Input 0: signal
 pub fn sink() -> An<Sink<U1>> {
     An(Sink::new())
 }
 
 /// Multichannel sink. Inputs are discarded.
-/// -Input(s): signal
+/// - Input(s): signal
 pub fn multisink<N: Size<f32>>() -> An<Sink<N>> {
     An(Sink::new())
 }
