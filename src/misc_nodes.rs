@@ -1317,3 +1317,71 @@ impl AudioNode for UnsteadyRamp {
         self.out = 0.;
     }
 }
+
+/// segment generator.
+/// - input 0: trigger (start segment when non-zero)
+/// - input 1: duration
+/// - input 2: iterations
+/// - input 3: start value
+/// - input 4: end value
+/// - output 0: segment
+/// - output 1: end of segment trigger
+#[derive(Clone)]
+pub struct Segment {
+    phase: f32,
+    sample_duration: f32,
+    iteration_count: f32,
+    active: bool,
+}
+
+impl Segment {
+    pub fn new() -> Self {
+        Self {
+            phase: 0.,
+            sample_duration: 1. / 44100.,
+            iteration_count: 0.,
+            active: false,
+        }
+    }
+}
+
+impl AudioNode for Segment {
+    const ID: u64 = 20222;
+    type Inputs = U5;
+    type Outputs = U2;
+
+    #[inline]
+    fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        let mut out = self.phase;
+        let mut end_trig = 0.;
+        if input[0] != 0. {
+            self.phase = 0.;
+            self.iteration_count = 0.;
+            self.active = true;
+        }
+        if self.active {
+            out = lerp(input[3], input[4], self.phase);
+            self.phase += self.sample_duration / input[1];
+            if self.phase >= 1. {
+                self.iteration_count += 1.;
+                self.phase = 0.;
+                if self.iteration_count >= input[2] {
+                    end_trig = 1.;
+                    self.active = false;
+                    out = self.phase;
+                }
+            }
+        }
+        [out, end_trig].into()
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        self.sample_duration = 1. / sample_rate as f32;
+    }
+
+    fn reset(&mut self) {
+        self.phase = 0.;
+        self.iteration_count = 0.;
+        self.active = false;
+    }
+}
