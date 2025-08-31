@@ -42,7 +42,7 @@ struct State {
     /// Random number generator.
     rnd: Rnd,
     /// Status of keys.
-    id: Vec<Option<EventId>>,
+    id: Vec<Option<(EventId, Shared)>>,
     /// Sequencer frontend.
     sequencer: Sequencer,
     /// Network frontend.
@@ -95,6 +95,15 @@ struct State {
     ping_amount: Shared,
     /// pingpong delay right channel attanuation
     pong_amount: Shared,
+    /// attack, decay, sustain (value), release
+    a: Shared,
+    d: Shared,
+    s: Shared,
+    r: Shared,
+    /// whether attack/decay/release is exponential
+    exp_a: bool,
+    exp_d: bool,
+    exp_r: bool,
 }
 
 static KEYS: [Key; 29] = [
@@ -266,6 +275,13 @@ where
         pong_time,
         ping_amount,
         pong_amount,
+        a: shared(1.),
+        d: shared(0.1),
+        s: shared(0.5),
+        r: shared(1.),
+        exp_a: false,
+        exp_d: false,
+        exp_r: false,
     };
 
     eframe::run_native(
@@ -321,6 +337,26 @@ impl eframe::App for State {
                 ui.selectable_value(&mut self.waveform, Waveform::PolySaw, "PolySaw");
                 ui.selectable_value(&mut self.waveform, Waveform::PolySquare, "PolySquare");
                 ui.selectable_value(&mut self.waveform, Waveform::PolyPulse, "PolyPulse");
+            });
+            ui.separator();
+
+            ui.horizontal(|ui| {
+                let mut a = self.a.value();
+                let mut d = self.d.value();
+                let mut s = self.s.value();
+                let mut r = self.r.value();
+                ui.label("adsr");
+                ui.add(egui::DragValue::new(&mut a).range(0.0..=10.).speed(0.01));
+                ui.add(egui::DragValue::new(&mut d).range(0.0..=10.).speed(0.01));
+                ui.add(egui::DragValue::new(&mut s).range(0.0001..=1.).speed(0.01));
+                ui.add(egui::DragValue::new(&mut r).range(0.0..=10.).speed(0.01));
+                self.a.set(a);
+                self.d.set(d);
+                self.s.set(s);
+                self.r.set(r);
+                ui.toggle_value(&mut self.exp_a, "exp_a");
+                ui.toggle_value(&mut self.exp_d, "exp_d");
+                ui.toggle_value(&mut self.exp_r, "exp_r");
             });
             ui.separator();
 
@@ -588,9 +624,11 @@ impl eframe::App for State {
             #[allow(clippy::needless_range_loop)]
             for i in 0..KEYS.len() {
                 if ctx.input(|c| !c.key_down(KEYS[i])) {
-                    if let Some(id) = self.id[i] {
-                        // Start fading out existing note.
-                        self.sequencer.edit_relative(id, 0.2, 0.2);
+                    if let Some((id, gate)) = &self.id[i] {
+                        // end the gate, starting envelope release stage
+                        gate.set(0.);
+                        // end existing note after release duration from now.
+                        self.sequencer.edit_relative(*id, self.r.value() as f64, 0.);
                         self.id[i] = None;
                     }
                 }
@@ -635,6 +673,11 @@ impl eframe::App for State {
                                 >> poly_pulse() * 0.2,
                         )),
                     };
+                    let gate = shared(1.);
+                    let env =
+                        (var(&gate) | var(&self.a) | var(&self.d) | var(&self.s) | var(&self.r))
+                            >> An(Adsr::new(self.exp_a, self.exp_d, self.exp_r));
+                    let waveform = waveform * env;
                     let filter = match self.filter {
                         Filter::None => Net::wrap(Box::new(pass())),
                         Filter::Moog => Net::wrap(Box::new(
@@ -670,14 +713,15 @@ impl eframe::App for State {
                     note.ping(false, AttoHash::new(self.rnd.u64()));
                     // Insert new note. We set the end time to infinity initially,
                     // which means it plays indefinitely until the key is released.
-                    self.id[i] = Some(self.sequencer.push_relative(
+                    let event_id = self.sequencer.push_relative(
                         0.0,
                         f64::INFINITY,
                         Fade::Smooth,
-                        0.02,
-                        0.2,
+                        0.,
+                        0.,
                         note,
-                    ));
+                    );
+                    self.id[i] = Some((event_id, gate));
                 }
             }
         });
