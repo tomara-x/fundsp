@@ -6,7 +6,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SizedSample};
 use eframe::egui;
 use egui::*;
-use fundsp::hacker::*;
+use fundsp::hacker32::*;
 use funutd::Rnd;
 
 #[derive(Debug, PartialEq)]
@@ -52,7 +52,7 @@ struct State {
     /// Selected filter.
     filter: Filter,
     /// Vibrato amount in 0...1.
-    vibrato_amount: f64,
+    vibrato_amount: f32,
     /// Chorus amount.
     chorus_amount: Shared,
     /// Reverb amount.
@@ -78,9 +78,9 @@ struct State {
     /// Right channel data for the oscilloscope.
     snoop1: Snoop,
     /// octave offset
-    octave: f64,
+    octave: f32,
     /// semitone offset
-    semi: f64,
+    semi: f32,
     /// feedback delay time
     delay_time: Shared,
     /// feedback amount
@@ -161,7 +161,7 @@ fn create_reverb(room_size: f32, time: f32, diffusion: f32) -> Box<dyn AudioUnit
 
 fn run<T>(device: &cpal::Device, config: &cpal::StreamConfig) -> Result<(), anyhow::Error>
 where
-    T: SizedSample + FromSample<f64>,
+    T: SizedSample + FromSample<f32>,
 {
     let sample_rate = config.sample_rate.0 as f64;
     let channels = config.channels as usize;
@@ -280,12 +280,12 @@ where
 
 fn write_data<T>(output: &mut [T], channels: usize, next_sample: &mut dyn FnMut() -> (f32, f32))
 where
-    T: SizedSample + FromSample<f64>,
+    T: SizedSample + FromSample<f32>,
 {
     for frame in output.chunks_mut(channels) {
         let sample = next_sample();
-        let left: T = T::from_sample(sample.0 as f64);
-        let right: T = T::from_sample(sample.1 as f64);
+        let left: T = T::from_sample(sample.0);
+        let right: T = T::from_sample(sample.1);
 
         for (channel, sample) in frame.iter_mut().enumerate() {
             if channel & 1 == 0 {
@@ -595,7 +595,7 @@ impl eframe::App for State {
                     }
                 }
                 if ctx.input(|c| c.key_down(KEYS[i])) && self.id[i].is_none() {
-                    let pitch_hz = midi_hz(40.0 + i as f64 + self.octave * 12. + self.semi);
+                    let pitch_hz = midi_hz(40.0 + i as f32 + self.octave * 12. + self.semi);
                     let v = self.vibrato_amount * 0.006;
                     let pitch = lfo(move |t| {
                         pitch_hz
