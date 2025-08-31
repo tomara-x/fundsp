@@ -1385,3 +1385,121 @@ impl AudioNode for Segment {
         self.active = false;
     }
 }
+
+/// adsr.
+/// - input 0: gate
+/// - input 1: attack time
+/// - input 2: decay time
+/// - input 3: sustain value
+/// - input 4: release time
+/// - output 0: envelope
+#[derive(Clone)]
+pub struct Adsr {
+    exp_a: bool,
+    exp_d: bool,
+    exp_r: bool,
+    phase: f32,
+    sample_duration: f32,
+    stage: AdsrStage,
+    gate: f32,
+    release_val: f32,
+    out: f32,
+}
+
+#[derive(Clone, PartialEq)]
+enum AdsrStage {
+    Attack,
+    Decay,
+    Sustain,
+    Release,
+    None,
+}
+
+impl Adsr {
+    pub fn new(exp_a: bool, exp_d: bool, exp_r: bool) -> Self {
+        Self {
+            exp_a,
+            exp_d,
+            exp_r,
+            phase: 0.,
+            sample_duration: 1. / 44100.,
+            stage: AdsrStage::None,
+            gate: 0.,
+            release_val: 0.,
+            out: 0.,
+        }
+    }
+}
+
+impl AudioNode for Adsr {
+    const ID: u64 = 10024;
+    type Inputs = U5;
+    type Outputs = U1;
+
+    #[inline]
+    fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        if input[0] > self.gate {
+            self.gate = input[0];
+            self.phase = 0.;
+            self.stage = AdsrStage::Attack;
+        } else if input[0] < self.gate {
+            self.gate = input[0];
+            self.stage = AdsrStage::Release;
+            self.release_val = self.out;
+            self.phase = 0.;
+        }
+        if self.stage == AdsrStage::Attack {
+            if self.exp_a {
+                self.out = xerp(0.0001, 1., self.phase);
+            } else {
+                self.out = lerp(0., 1., self.phase);
+            }
+            self.phase += self.sample_duration / input[1];
+            if self.phase >= 1. {
+                self.phase = 0.;
+                self.stage = AdsrStage::Decay;
+            }
+        }
+        if self.stage == AdsrStage::Decay {
+            if self.exp_d {
+                self.out = xerp(1., input[3], self.phase);
+            } else {
+                self.out = lerp(1., input[3], self.phase);
+            }
+            self.phase += self.sample_duration / input[2];
+            if self.phase >= 1. {
+                self.phase = 0.;
+                self.stage = AdsrStage::Sustain;
+            }
+        }
+        if self.stage == AdsrStage::Sustain {
+            self.out = input[3];
+        }
+        if self.stage == AdsrStage::Release {
+            if self.exp_r {
+                self.out = xerp(self.release_val, 0.001, self.phase);
+            } else {
+                self.out = lerp(self.release_val, 0., self.phase);
+            }
+            self.phase += self.sample_duration / input[4];
+            if self.phase >= 1. {
+                self.phase = 0.;
+                self.stage = AdsrStage::None;
+                self.out = 0.;
+            }
+        }
+        [self.out].into()
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        self.sample_duration = 1. / sample_rate as f32;
+    }
+
+    fn reset(&mut self) {
+        self.phase = 0.;
+        self.stage = AdsrStage::None;
+        self.gate = 0.;
+        self.release_val = 0.;
+        self.out = 0.;
+    }
+}
