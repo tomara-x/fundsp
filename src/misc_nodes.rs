@@ -1503,3 +1503,60 @@ impl AudioNode for Adsr {
         self.out = 0.;
     }
 }
+
+/// subsample a node
+pub fn kr<X: AudioNode>(node: An<X>, n: usize) -> An<KrNode<X>> {
+    An(KrNode::new(node.0, n))
+}
+
+/// tick a node every n samples.
+/// - inputs 0..: inputs to the node
+/// - outputs 0..: last outputs from the node
+#[derive(Clone)]
+pub struct KrNode<X: AudioNode> {
+    x: X,
+    n: usize,
+    count: usize,
+    out: Frame<f32, X::Outputs>,
+}
+
+impl<X: AudioNode> KrNode<X> {
+    pub fn new(x: X, n: usize) -> Self {
+        assert!(n > 0);
+        Self {
+            x,
+            n,
+            count: 0,
+            out: Frame::default(),
+        }
+    }
+}
+
+impl<X: AudioNode> AudioNode for KrNode<X> {
+    const ID: u64 = 3553;
+    type Inputs = X::Inputs;
+    type Outputs = X::Outputs;
+
+    #[inline]
+    fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        if self.count == 0 {
+            self.count = self.n;
+            self.out = self.x.tick(input);
+        }
+        self.count -= 1;
+        self.out.clone()
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        self.x.set_sample_rate(sample_rate / self.n as f64);
+    }
+
+    fn reset(&mut self) {
+        self.x.reset();
+        self.count = 0;
+    }
+
+    fn allocate(&mut self) {
+        self.x.allocate();
+    }
+}
