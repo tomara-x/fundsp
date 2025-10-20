@@ -1202,6 +1202,7 @@ pub struct Unsteady {
     step: usize,
     progress: f32,
     sample_duration: f32,
+    ignore_reset: bool,
 }
 
 impl Unsteady {
@@ -1212,7 +1213,12 @@ impl Unsteady {
             step: 0,
             progress: 0.,
             sample_duration: 1. / 44100.,
+            ignore_reset: false,
         }
+    }
+    pub fn no_reset(mut self) -> Self {
+        self.ignore_reset = true;
+        self
     }
 }
 
@@ -1243,6 +1249,9 @@ impl AudioNode for Unsteady {
     }
 
     fn reset(&mut self) {
+        if self.ignore_reset {
+            return;
+        }
         self.step = 0;
         self.progress = 0.;
     }
