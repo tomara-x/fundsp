@@ -4,7 +4,7 @@
 use assert_no_alloc::*;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SizedSample};
-use fundsp::hacker::*;
+use fundsp::hacker32::*;
 
 #[cfg(debug_assertions)] // required when disable_release is set (default)
 #[global_allocator]
@@ -60,6 +60,24 @@ where
     //let c = dc(110.0) >> lorenz();
     //let c = organ_hz(110.1) + organ_hz(54.9);
     //let c = pink() >> hold_hz(440.0, 0.0);
+
+    //// stepping pattern
+    //let c = An(Unsteady::new(vec![0.8/3.], true).no_reset())
+    //    >> An(Step::new(vec![
+    //        Box::new(sound::cymbal(1) * 0.15),
+    //        Box::new(sound::cymbal(8) * 0.15),
+    //        Box::new(sound::cymbal(8) * 0.15),
+    //        Box::new(sound::snaredrum(4, 0.6)),
+    //        Box::new(sound::snaredrum(1, 0.8)),
+    //        Box::new(sound::snaredrum(4, 0.6)),
+    //    ]));
+    //let c = An(Unsteady::new(vec![0.8], true))
+    //    >> An(Step::new(vec![
+    //        Box::new(sine_hz(230.) * ahr(0.002, 0.78, 0.002)),
+    //        Box::new(brown() * ahr(0.002, 0.78, 0.002)),
+    //        Box::new(c * ahr(0.002, 0.78, 0.002)),
+    //        Box::new(sound::bassdrum(0.2, 2000., 80.)),
+    //    ]));
 
     // Filtered noise tone.
     //let c = (noise() | dc((440.0, 50.0))) >> !resonator() >> resonator();
