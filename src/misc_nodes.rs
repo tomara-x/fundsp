@@ -1326,7 +1326,7 @@ impl AudioNode for UnsteadyRamp {
 /// - input 4: end value
 /// - output 0: segment
 /// - output 1: end of segment trigger
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct Segment {
     phase: f32,
     sample_duration: f32,
@@ -1558,5 +1558,116 @@ impl<X: AudioNode> AudioNode for KrNode<X> {
 
     fn allocate(&mut self) {
         self.x.allocate();
+    }
+}
+
+/// step through nodes with every non-zero trigger.
+/// units must have 0 inputs and 1 output
+/// - input 0: trigger
+/// - output 0: output from selected unit
+#[derive(Default, Clone)]
+pub struct Step {
+    units: Vec<Box<dyn AudioUnit>>,
+    i: usize,
+}
+
+impl Step {
+    pub fn new(units: Vec<Box<dyn AudioUnit>>) -> Self {
+        Self { units, i: 0 }
+    }
+}
+
+impl AudioNode for Step {
+    const ID: u64 = 190;
+    type Inputs = U1;
+    type Outputs = U1;
+
+    #[inline]
+    fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        if input[0] != 0. {
+            self.i = (self.i + 1) % self.units.len();
+            if let Some(unit) = self.units.get_mut(self.i) {
+                unit.reset();
+            }
+        }
+        let mut buffer = [0.];
+        if let Some(unit) = self.units.get_mut(self.i) {
+            unit.tick(&[], &mut buffer);
+        }
+        buffer.into()
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        for unit in &mut self.units {
+            unit.set_sample_rate(sample_rate);
+        }
+    }
+
+    fn reset(&mut self) {
+        for unit in &mut self.units {
+            unit.reset();
+        }
+    }
+
+    fn allocate(&mut self) {
+        for unit in self.units.iter_mut() {
+            unit.allocate();
+        }
+    }
+}
+
+/// step through filter nodes with every non-zero trigger.
+/// units must have 1 input and 1 output
+/// - input 0: input to filter units
+/// - input 1: trigger
+/// - output 0: output from selected unit
+#[derive(Default, Clone)]
+pub struct FilterStep {
+    units: Vec<Box<dyn AudioUnit>>,
+    i: usize,
+}
+
+impl FilterStep {
+    pub fn new(units: Vec<Box<dyn AudioUnit>>) -> Self {
+        Self { units, i: 0 }
+    }
+}
+
+impl AudioNode for FilterStep {
+    const ID: u64 = 190;
+    type Inputs = U2;
+    type Outputs = U1;
+
+    #[inline]
+    fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
+        if input[1] != 0. {
+            self.i = (self.i + 1) % self.units.len();
+            if let Some(unit) = self.units.get_mut(self.i) {
+                unit.reset();
+            }
+        }
+        let mut buffer = [0.];
+        if let Some(unit) = self.units.get_mut(self.i) {
+            unit.tick(&[input[0]], &mut buffer);
+        }
+        buffer.into()
+    }
+
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        for unit in &mut self.units {
+            unit.set_sample_rate(sample_rate);
+        }
+    }
+
+    fn reset(&mut self) {
+        for unit in &mut self.units {
+            unit.reset();
+        }
+    }
+
+    fn allocate(&mut self) {
+        for unit in self.units.iter_mut() {
+            unit.allocate();
+        }
     }
 }
