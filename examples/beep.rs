@@ -62,22 +62,29 @@ where
     //let c = pink() >> hold_hz(440.0, 0.0);
 
     //// stepping pattern
-    //let c = An(Unsteady::new(vec![0.8/3.], true).no_reset())
+    //let subsub = An(Unsteady::new(vec![1./3./8.], true).no_reset())
+    //    >> An(Step::new(vec![
+    //        Box::new(sound::snaredrum(4, 0.4) * 0.1),
+    //    ]));
+    //let sub1 = An(Unsteady::new(vec![1./3., 1./3., 1./3., 1.], true).no_reset())
     //    >> An(Step::new(vec![
     //        Box::new(sound::cymbal(1) * 0.15),
-    //        Box::new(sound::cymbal(8) * 0.15),
-    //        Box::new(sound::cymbal(8) * 0.15),
-    //        Box::new(sound::snaredrum(4, 0.6)),
-    //        Box::new(sound::snaredrum(1, 0.8)),
-    //        Box::new(sound::snaredrum(4, 0.6)),
+    //        Box::new(sound::cymbal(2) * 0.15),
+    //        Box::new(sound::cymbal(3) * 0.15),
+    //        Box::new(subsub),
     //    ]));
-    //let c = An(Unsteady::new(vec![0.8], true))
+    //let sub2 = An(Unsteady::new(vec![1./5.], true).no_reset())
     //    >> An(Step::new(vec![
-    //        Box::new(sine_hz(230.) * ahr(0.002, 0.78, 0.002)),
-    //        Box::new(brown() * ahr(0.002, 0.78, 0.002)),
-    //        Box::new(c * ahr(0.002, 0.78, 0.002)),
-    //        Box::new(sound::bassdrum(0.2, 2000., 80.)),
+    //        Box::new(organ_hz(220.) * ahr(0.02, 0., 0.1)),
     //    ]));
+    //let pattern = An(Unsteady::new(vec![1.], true))
+    //    >> An(Step::new(vec![
+    //        Box::new(sound::bassdrum(0.4, 1000., 80.)),
+    //        Box::new(sub1),
+    //        Box::new(sound::snaredrum(1, 0.8)),
+    //        Box::new(sub2),
+    //    ]));
+    //let c = pattern;
 
     // Filtered noise tone.
     //let c = (noise() | dc((440.0, 50.0))) >> !resonator() >> resonator();
