@@ -62,28 +62,39 @@ where
     //let c = pink() >> hold_hz(440.0, 0.0);
 
     //// stepping pattern
-    //let subsub = An(Unsteady::new(vec![1./3./8.], true).no_reset())
+    //use fundsp::sound::*;
+    //let t = 1.;
+    //let subsubsub2 = An(Unsteady::new(vec![t / 4. / 3.], true).no_reset())
+    //    >> An(Step::new(vec![Box::new(cymbal(1) * 0.1)]));
+    //let subsubsub1 = An(Unsteady::new(vec![t / 8.], true).no_reset())
     //    >> An(Step::new(vec![
-    //        Box::new(sound::snaredrum(4, 0.4) * 0.1),
+    //        Box::new(cymbal(1) * 0.1),
+    //        Box::new(soft_saw_hz(220.)),
     //    ]));
-    //let sub1 = An(Unsteady::new(vec![1./3., 1./3., 1./3., 1.], true).no_reset())
+    //let subsub = An(Unsteady::new(vec![t / 4.], true).no_reset())
     //    >> An(Step::new(vec![
-    //        Box::new(sound::cymbal(1) * 0.15),
-    //        Box::new(sound::cymbal(2) * 0.15),
-    //        Box::new(sound::cymbal(3) * 0.15),
+    //        Box::new(cymbal(1) * 0.1),
+    //        Box::new(dc(0.)),
+    //        Box::new(subsubsub1),
+    //        Box::new(subsubsub2),
+    //    ]));
+    //let sub1 = An(Unsteady::new(vec![t / 4.], true).no_reset())
+    //    >> An(Step::new(vec![
+    //        Box::new(bassdrum(0.5, 1000., 80.)),
+    //        Box::new(bassdrum(0.5, 1000., 80.)),
+    //        Box::new(cymbal(1) * 0.1),
+    //        Box::new(bassdrum(0.5, 1000., 80.)),
+    //        Box::new(snaredrum(0, 0.4)),
+    //        Box::new(bassdrum(0.5, 1000., 80.)),
     //        Box::new(subsub),
     //    ]));
-    //let sub2 = An(Unsteady::new(vec![1./5.], true).no_reset())
+    //let sub2 = An(Unsteady::new(vec![t / 2.], true).no_reset())
     //    >> An(Step::new(vec![
-    //        Box::new(organ_hz(220.) * ahr(0.02, 0., 0.1)),
+    //        Box::new(organ_hz(1100.) * ahr(0.002, 0., 0.1)),
+    //        Box::new(bassdrum(0.5, 4000., 80.)),
     //    ]));
-    //let pattern = An(Unsteady::new(vec![1.], true))
-    //    >> An(Step::new(vec![
-    //        Box::new(sound::bassdrum(0.4, 1000., 80.)),
-    //        Box::new(sub1),
-    //        Box::new(sound::snaredrum(1, 0.8)),
-    //        Box::new(sub2),
-    //    ]));
+    //let pattern = An(Unsteady::new(vec![t, t / 2.], true))
+    //    >> An(Step::new(vec![Box::new(sub1), Box::new(sub2)]));
     //let c = pattern;
 
     // Filtered noise tone.

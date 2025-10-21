@@ -1200,8 +1200,8 @@ pub struct Unsteady {
     times: Vec<f32>,
     looping: bool,
     step: usize,
-    progress: f32,
-    sample_duration: f32,
+    progress: f64,
+    sample_duration: f64,
     ignore_reset: bool,
 }
 
@@ -1231,7 +1231,7 @@ impl AudioNode for Unsteady {
     fn tick(&mut self, _input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
         let mut out = 0.;
         if let Some(step_time) = self.times.get(self.step) {
-            if self.progress >= *step_time {
+            if self.progress >= (*step_time).into() {
                 out = 1.;
                 self.progress = 0.;
                 self.step = self.step.wrapping_add(1);
@@ -1245,7 +1245,7 @@ impl AudioNode for Unsteady {
     }
 
     fn set_sample_rate(&mut self, sample_rate: f64) {
-        self.sample_duration = 1. / sample_rate as f32;
+        self.sample_duration = 1. / sample_rate;
     }
 
     fn reset(&mut self) {
