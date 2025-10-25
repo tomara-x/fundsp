@@ -5,6 +5,7 @@ use super::audiounit::*;
 use super::buffer::*;
 use super::combinator::An;
 use super::fft::*;
+use super::hacker32::envelope;
 use super::math::*;
 use super::signal::*;
 use super::*;
@@ -1680,4 +1681,22 @@ impl AudioNode for FilterStep {
             unit.allocate();
         }
     }
+}
+
+/// attack-hold-release envelope
+/// - output 0: envelope
+pub fn ahr(attack: f32, hold: f32, release: f32) -> An<impl AudioNode<Inputs = U0, Outputs = U1>> {
+    let hold_end = hold + attack;
+    let end = hold_end + release;
+    envelope(move |t| {
+        if t < attack {
+            t / attack
+        } else if t < hold_end {
+            1.
+        } else if t < end {
+            1. - (t - hold_end) / release
+        } else {
+            0.
+        }
+    })
 }
