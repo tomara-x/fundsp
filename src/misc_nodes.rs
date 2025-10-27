@@ -1046,9 +1046,11 @@ impl AudioNode for EuclidSeq {
             if r != self.rotation {
                 self.rotation = r;
                 if r.is_positive() {
-                    self.steps.rotate_right(r as usize);
+                    let r = r as usize % self.steps.len();
+                    self.steps.rotate_right(r);
                 } else if r.is_negative() {
-                    self.steps.rotate_left(r.unsigned_abs());
+                    let r = r.unsigned_abs() % self.steps.len();
+                    self.steps.rotate_left(r);
                 }
             }
             out[0] = self.steps[self.cursor];
