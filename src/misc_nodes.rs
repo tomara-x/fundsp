@@ -1135,7 +1135,7 @@ impl AudioNode for Gate {
 /// let mut g = i >> sink() | o;
 /// ```
 pub fn buffer(capacity: usize) -> (An<BufferWrite>, An<BufferRead>) {
-    let capacity = min(capacity, 1);
+    let capacity = max(capacity, 1);
     let vec = vec![0.; capacity];
     let arc1 = Arc::new(vec);
     let arc2 = Arc::clone(&arc1);
