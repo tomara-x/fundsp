@@ -5,11 +5,12 @@
 
 use super::audionode::AudioNode;
 use super::combinator::An;
-use super::hacker32::{map, pass, tick};
+use super::hacker::{map, pass, tick, AtomicTable, Interpolation};
 use super::math;
 use super::Frame;
 use core::num::Wrapping;
 use numeric_array::typenum::*;
+use std::sync::Arc;
 
 pub fn rise() -> An<impl AudioNode<Inputs = U1, Outputs = U1>> {
     (pass() ^ tick()) >> map(|i: &Frame<f32, U2>| f32::from(i[0] > i[1]))
@@ -392,4 +393,15 @@ pub fn spline_noise() -> An<impl AudioNode<Inputs = U2, Outputs = U1>> {
 
 pub fn fractal_noise() -> An<impl AudioNode<Inputs = U4, Outputs = U1>> {
     map(|i: &Frame<f32, U4>| math::fractal_noise(i[0] as u64, i[1] as i64, i[2], i[3]) as f32)
+}
+
+pub fn atomic_phase(
+    t: Arc<AtomicTable>,
+    interpolation: Interpolation,
+) -> An<impl AudioNode<Inputs = U1, Outputs = U1>> {
+    map(move |i: &Frame<f32, U1>| match interpolation {
+        Interpolation::Nearest => t.read_nearest(i[0]),
+        Interpolation::Linear => t.read_linear(i[0]),
+        Interpolation::Cubic => t.read_cubic(i[0]),
+    })
 }
