@@ -5,7 +5,7 @@
 
 use super::audionode::AudioNode;
 use super::combinator::An;
-use super::hacker::{map, pass, tick, AtomicTable, Interpolation};
+use super::hacker::{map, pass, tick, AtomicTable, Interpolation, Wave};
 use super::math;
 use super::Frame;
 use core::num::Wrapping;
@@ -403,5 +403,55 @@ pub fn atomic_phase(
         Interpolation::Nearest => t.read_nearest(i[0]),
         Interpolation::Linear => t.read_linear(i[0]),
         Interpolation::Cubic => t.read_cubic(i[0]),
+    })
+}
+
+pub fn wave_at(wave: Arc<Wave>) -> An<impl AudioNode<Inputs = U2, Outputs = U1>> {
+    let channels = wave.channels();
+    let len = wave.len();
+    map(move |i: &Frame<f32, U2>| {
+        let chan = i[0] as usize;
+        let index = i[1] as usize;
+        if chan < channels && index < len {
+            wave.at(chan, index)
+        } else {
+            0.
+        }
+    })
+}
+
+/// only use this node if all the arcs are in the audio thread
+pub fn wave_set(wave: Arc<Wave>) -> An<impl AudioNode<Inputs = U3, Outputs = U0>> {
+    let channels = wave.channels();
+    let len = wave.len();
+    map(move |i: &Frame<f32, U3>| {
+        let chan = i[0] as usize;
+        let index = i[1] as usize;
+        if chan < channels && index < len {
+            let ptr = Arc::as_ptr(&wave).cast_mut();
+            // SAFETY: if all copies of that arc are in the same audio thread
+            // (wave players, these nodes, etc) then only one is being processed at a time
+            let wave = unsafe { &mut *ptr };
+            wave.set(chan, index, i[2])
+        }
+        Frame::default()
+    })
+}
+
+/// only use this node if all the arcs are in the audio thread
+pub fn wave_mix(wave: Arc<Wave>) -> An<impl AudioNode<Inputs = U3, Outputs = U0>> {
+    let channels = wave.channels();
+    let len = wave.len();
+    map(move |i: &Frame<f32, U3>| {
+        let chan = i[0] as usize;
+        let index = i[1] as usize;
+        if chan < channels && index < len {
+            let ptr = Arc::as_ptr(&wave).cast_mut();
+            // SAFETY: if all copies of that arc are in the same audio thread
+            // (wave players, these nodes, etc) then only one is being processed at a time
+            let wave = unsafe { &mut *ptr };
+            wave.mix(chan, index, i[2])
+        }
+        Frame::default()
     })
 }
