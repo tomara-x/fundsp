@@ -1598,7 +1598,9 @@ impl AudioNode for Step {
     #[inline]
     fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
         if input[0] != 0. {
-            self.i = (self.i + 1) % self.units.len();
+            if let Some(rem) = (self.i + 1).checked_rem(self.units.len()) {
+                self.i = rem;
+            }
             if let Some(unit) = self.units.get_mut(self.i) {
                 unit.reset();
             }
@@ -1654,7 +1656,9 @@ impl AudioNode for FilterStep {
     #[inline]
     fn tick(&mut self, input: &Frame<f32, Self::Inputs>) -> Frame<f32, Self::Outputs> {
         if input[1] != 0. {
-            self.i = (self.i + 1) % self.units.len();
+            if let Some(rem) = (self.i + 1).checked_rem(self.units.len()) {
+                self.i = rem;
+            }
             if let Some(unit) = self.units.get_mut(self.i) {
                 unit.reset();
             }
