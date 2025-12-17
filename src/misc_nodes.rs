@@ -1706,3 +1706,60 @@ pub fn ahr(attack: f32, hold: f32, release: f32) -> An<impl AudioNode<Inputs = U
         }
     })
 }
+
+/// make inner unit ignore reset.
+/// - inputs 0..: inputs to inner unit
+/// - outputs 0..: outputs from inner unit
+#[derive(Clone)]
+pub struct IgnoreReset {
+    x: Box<dyn AudioUnit>,
+}
+
+impl IgnoreReset {
+    pub fn new(x: Box<dyn AudioUnit>) -> Self {
+        Self { x }
+    }
+}
+
+impl AudioUnit for IgnoreReset {
+    fn set_sample_rate(&mut self, sample_rate: f64) {
+        self.x.set_sample_rate(sample_rate);
+    }
+
+    fn tick(&mut self, input: &[f32], output: &mut [f32]) {
+        self.x.tick(input, output);
+    }
+
+    fn process(&mut self, size: usize, input: &BufferRef, output: &mut BufferMut) {
+        self.x.process(size, input, output);
+    }
+
+    fn inputs(&self) -> usize {
+        self.x.inputs()
+    }
+
+    fn outputs(&self) -> usize {
+        self.x.outputs()
+    }
+
+    fn route(&mut self, input: &SignalFrame, _frequency: f64) -> SignalFrame {
+        Routing::Arbitrary(0.0).route(input, self.outputs())
+    }
+
+    fn get_id(&self) -> u64 {
+        const ID: u64 = 13161;
+        ID
+    }
+
+    fn ping(&mut self, probe: bool, hash: AttoHash) -> AttoHash {
+        self.x.ping(probe, hash.hash(self.get_id()))
+    }
+
+    fn footprint(&self) -> usize {
+        core::mem::size_of::<Self>()
+    }
+
+    fn allocate(&mut self) {
+        self.x.allocate();
+    }
+}

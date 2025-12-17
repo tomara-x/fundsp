@@ -7,6 +7,7 @@ use super::audionode::AudioNode;
 use super::combinator::An;
 use super::hacker::{map, pass, tick, AtomicTable, Interpolation, Wave};
 use super::math;
+use super::shared::Shared;
 use super::Frame;
 use core::num::Wrapping;
 use numeric_array::typenum::*;
@@ -452,6 +453,13 @@ pub fn wave_mix(wave: Arc<Wave>) -> An<impl AudioNode<Inputs = U3, Outputs = U0>
             let wave = unsafe { &mut *ptr };
             wave.mix(chan, index, i[2])
         }
+        Frame::default()
+    })
+}
+
+pub fn var_set(shared: Shared) -> An<impl AudioNode<Inputs = U1, Outputs = U0>> {
+    map(move |i| {
+        shared.set(i[0]);
         Frame::default()
     })
 }
