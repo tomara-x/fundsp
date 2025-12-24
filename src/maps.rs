@@ -463,3 +463,11 @@ pub fn var_set(shared: Shared) -> An<impl AudioNode<Inputs = U1, Outputs = U0>> 
         Frame::default()
     })
 }
+
+pub fn mirror_to(min: f32, max: f32) -> An<impl AudioNode<Inputs = U1, Outputs = U1>> {
+    map(move |i| math::mirror_to(min, max, i[0]))
+}
+
+pub fn wrap_to(min: f32, max: f32) -> An<impl AudioNode<Inputs = U1, Outputs = U1>> {
+    map(move |i| math::wrap_to(min, max, i[0]))
+}

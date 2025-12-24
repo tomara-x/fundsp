@@ -772,3 +772,11 @@ pub fn mirror<T: Num>(x: T) -> T {
 pub fn wrap<T: Num>(x: T) -> T {
     x - x.floor()
 }
+
+pub fn mirror_to<T: Num>(min: T, max: T, x: T) -> T {
+    lerp(min, max, mirror(delerp(min, max, x)))
+}
+
+pub fn wrap_to<T: Num>(min: T, max: T, x: T) -> T {
+    lerp(min, max, wrap(delerp(min, max, x)))
+}
